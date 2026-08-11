@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MONITOR — Dados Pessoais</title>
+  <script>
+    (function () {
+      var theme = localStorage.getItem("monitor_theme") || "dark";
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="topbar__title">Dados Pessoais</h1>
+    <div class="topbar__actions">
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Alternar tema">
+        <svg class="icon-sun" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path>
+        </svg>
+      </button>
+      <button
+        id="menu-toggle"
+        class="hamburger"
+        type="button"
+        aria-label="Abrir menu"
+        aria-expanded="false"
+        aria-controls="nav-menu"
+      >
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <div id="nav-overlay" class="nav-overlay"></div>
+  <nav id="nav-menu" class="nav-menu" aria-hidden="true">
+    <p class="nav-menu__title">Menu</p>
+    <a href="dados-pessoais.html" class="nav-menu__link nav-menu__link--active">Dados Pessoais</a>
+    <a href="imc.html" class="nav-menu__link">IMC</a>
+    <button id="menu-sair" class="nav-menu__link nav-menu__link--exit" type="button">Sair</button>
+  </nav>
+
+  <main class="container">
+    <form id="form-dados-pessoais" class="card" novalidate>
+      <div class="field">
+        <label for="nome">Nome</label>
+        <input type="text" id="nome" name="nome" autocomplete="name" required />
+      </div>
+
+      <div class="field">
+        <label for="data-nascimento">Data de nascimento</label>
+        <input type="date" id="data-nascimento" name="data-nascimento" required />
+      </div>
+
+      <div class="field">
+        <label for="idade">Idade</label>
+        <input type="text" id="idade" name="idade" readonly placeholder="Preenchido automaticamente" />
+      </div>
+
+      <div class="field">
+        <label>Sexo</label>
+        <div class="radio-group">
+          <div class="radio-option">
+            <input type="radio" id="sexo-m" name="sexo" value="M" />
+            <label for="sexo-m">Masculino</label>
+          </div>
+          <div class="radio-option">
+            <input type="radio" id="sexo-f" name="sexo" value="F" />
+            <label for="sexo-f">Feminino</label>
+          </div>
+          <div class="radio-option">
+            <input type="radio" id="sexo-o" name="sexo" value="O" />
+            <label for="sexo-o">Outro</label>
+          </div>
+        </div>
+      </div>
+
+      <p id="form-feedback" class="form-feedback"></p>
+
+      <div class="actions">
+        <button type="submit" class="btn btn-primary btn-block">Salvar</button>
+        <a href="index.html" class="btn btn-secondary btn-block">Voltar</a>
+      </div>
+    </form>
+  </main>
+
+  <script src="js/storage.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/menu.js"></script>
+  <script src="js/dados-pessoais.js"></script>
+</body>
+</html>

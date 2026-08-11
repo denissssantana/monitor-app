@@ -1,0 +1,552 @@
+/* =========================================================
+   MONITOR — estilos globais
+   Vibe: crossfit / militar / aventura / atividade intensa
+   Tema padrão: escuro. Alternável via [data-theme] no <html>.
+   ========================================================= */
+
+/* ---------- Reset básico ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* ---------- Design tokens ---------- */
+:root {
+  /* Tema escuro (padrão) */
+  --bg: #121412;
+  --bg-elevated: #1c1f1b;
+  --bg-input: #23261f;
+  --text: #eeeee6;
+  --text-muted: #9a9c8f;
+  --border: #3a3f30;
+  --border-strong: #565c46;
+
+  --accent-olive: #5c6b2f;
+  --accent-olive-strong: #77893d;
+  --accent-action: #ff4a1f;
+  --accent-action-strong: #ff6a3d;
+  --accent-success: #6fae4a;
+  --accent-warning: #e0a624;
+
+  --on-accent: #101008;
+
+  --font-display: "Oswald", "Arial Narrow", sans-serif;
+  --font-mega: "Bebas Neue", "Oswald", sans-serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  --radius: 2px;
+  --shadow: 0 4px 0 rgba(0, 0, 0, 0.35);
+}
+
+:root[data-theme="light"] {
+  --bg: #ece3cf;
+  --bg-elevated: #f4ecdb;
+  --bg-input: #fbf6ea;
+  --text: #2a2b24;
+  --text-muted: #6b6b5c;
+  --border: #c9bd98;
+  --border-strong: #a99d76;
+
+  --accent-olive: #4b5a24;
+  --accent-olive-strong: #3c481d;
+  --accent-action: #d43e14;
+  --accent-action-strong: #b3350f;
+  --accent-success: #4a7a30;
+  --accent-warning: #a8730f;
+
+  --on-accent: #fbf6ea;
+
+  --shadow: 0 4px 0 rgba(0, 0, 0, 0.15);
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin: 0 0 0.5em;
+}
+
+a {
+  color: inherit;
+}
+
+/* ---------- Layout utilitário ---------- */
+.container {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem 3rem;
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 640px;
+    padding: 2rem 1.5rem 4rem;
+  }
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ---------- Splash (index.html) ---------- */
+.splash {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem 1.5rem;
+  position: relative;
+}
+
+.splash__theme-toggle {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+
+.splash__badge {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--accent-olive-strong);
+  margin-bottom: 0.75rem;
+}
+
+.splash__title {
+  font-family: var(--font-mega);
+  font-size: clamp(3.5rem, 18vw, 6rem);
+  letter-spacing: 0.05em;
+  color: var(--text);
+  margin: 0;
+  line-height: 0.9;
+}
+
+.splash__title span {
+  color: var(--accent-action);
+}
+
+.splash__tagline {
+  margin-top: 1rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  max-width: 22rem;
+}
+
+.splash__actions {
+  margin-top: 3rem;
+  width: 100%;
+  max-width: 20rem;
+}
+
+/* ---------- Barra superior fixa ---------- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1.25rem;
+  background-color: var(--bg-elevated);
+  border-bottom: 3px solid var(--accent-olive);
+}
+
+.topbar__title {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ---------- Botão de tema ---------- */
+.theme-toggle {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-input);
+  border: 2px solid var(--border-strong);
+  color: var(--text);
+  cursor: pointer;
+  border-radius: var(--radius);
+}
+
+.theme-toggle svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  stroke: currentColor;
+  fill: none;
+}
+
+:root[data-theme="light"] .theme-toggle .icon-moon,
+:root:not([data-theme="light"]) .theme-toggle .icon-sun {
+  display: none;
+}
+
+/* ---------- Botão hambúrguer ---------- */
+.hamburger {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: var(--bg-input);
+  border: 2px solid var(--border-strong);
+  cursor: pointer;
+  border-radius: var(--radius);
+}
+
+.hamburger span {
+  display: block;
+  width: 1.2rem;
+  height: 2px;
+  background-color: var(--text);
+}
+
+/* ---------- Menu de navegação ---------- */
+.nav-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 35;
+}
+
+.nav-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.nav-menu {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: min(78vw, 300px);
+  background: var(--bg-elevated);
+  border-left: 3px solid var(--accent-olive);
+  transform: translateX(100%);
+  transition: transform 0.25s ease;
+  z-index: 40;
+  padding: 1.5rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.nav-menu.open {
+  transform: translateX(0);
+}
+
+.nav-menu__title {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.nav-menu__link {
+  display: block;
+  padding: 0.85rem 0.75rem;
+  background: var(--bg-input);
+  border: 2px solid var(--border);
+  color: var(--text);
+  text-decoration: none;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.95rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.nav-menu__link:hover,
+.nav-menu__link:focus-visible {
+  border-color: var(--accent-olive-strong);
+}
+
+.nav-menu__link--active {
+  border-color: var(--accent-olive-strong);
+  background-color: color-mix(in srgb, var(--accent-olive) 25%, var(--bg-input));
+}
+
+.nav-menu__link--exit {
+  margin-top: auto;
+  border-color: var(--accent-action);
+  color: var(--accent-action);
+}
+
+/* ---------- Formulários ---------- */
+.card {
+  background: var(--bg-elevated);
+  border: 2px solid var(--border);
+  padding: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.field {
+  margin-bottom: 1.1rem;
+}
+
+.field:last-child {
+  margin-bottom: 0;
+}
+
+.field label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+}
+
+.field input[type="text"],
+.field input[type="date"],
+.field input[type="number"],
+.field select {
+  width: 100%;
+  padding: 0.75rem 0.8rem;
+  background: var(--bg-input);
+  border: 2px solid var(--border-strong);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  border-radius: var(--radius);
+}
+
+.field input:focus,
+.field select:focus {
+  outline: none;
+  border-color: var(--accent-action);
+}
+
+.field input[readonly] {
+  color: var(--text-muted);
+  border-style: dashed;
+}
+
+.radio-group {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.radio-option {
+  flex: 1 1 auto;
+}
+
+.radio-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.radio-option label {
+  display: block;
+  text-align: center;
+  padding: 0.7rem 0.5rem;
+  border: 2px solid var(--border-strong);
+  background: var(--bg-input);
+  color: var(--text);
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  margin: 0;
+}
+
+.radio-option input:checked + label {
+  border-color: var(--accent-olive-strong);
+  background-color: color-mix(in srgb, var(--accent-olive) 30%, var(--bg-input));
+  color: var(--text);
+}
+
+.form-feedback {
+  min-height: 1.2rem;
+  font-size: 0.85rem;
+  color: var(--accent-action);
+  margin-top: 0.75rem;
+}
+
+.form-feedback.success {
+  color: var(--accent-success);
+}
+
+/* ---------- Botões ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.95rem 1.25rem;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.95rem;
+  border: 2px solid transparent;
+  cursor: pointer;
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  box-shadow: var(--shadow);
+  transition: transform 0.05s ease;
+}
+
+.btn:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.btn-primary {
+  background-color: var(--accent-action);
+  color: var(--on-accent);
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-action-strong);
+}
+
+.btn-secondary {
+  background-color: transparent;
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.btn-secondary:hover {
+  border-color: var(--accent-olive-strong);
+}
+
+.btn-block + .btn-block {
+  margin-top: 0.75rem;
+}
+
+.actions {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Resultado de IMC ---------- */
+.imc-result {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: var(--bg-elevated);
+  border: 2px solid var(--accent-olive);
+  text-align: center;
+}
+
+.imc-result__label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--text-muted);
+}
+
+.imc-result__value {
+  font-family: var(--font-mega);
+  font-size: clamp(4.5rem, 28vw, 7rem);
+  line-height: 1;
+  color: var(--accent-action);
+  margin: 0.25rem 0;
+}
+
+.imc-result__classificacao {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 1.2rem;
+}
+
+/* ---------- Gráfico ---------- */
+.chart-card {
+  margin-top: 1.5rem;
+  background: var(--bg-elevated);
+  border: 2px solid var(--border);
+  padding: 1rem;
+}
+
+.chart-card__title {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.chart-empty {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 1.5rem 0;
+}
+
+/* ---------- Desktop ---------- */
+@media (min-width: 768px) {
+  .card {
+    padding: 2rem;
+  }
+
+  .radio-group {
+    max-width: 20rem;
+  }
+
+  .actions {
+    flex-direction: row;
+    gap: 0.75rem;
+  }
+
+  .btn-block + .btn-block {
+    margin-top: 0;
+  }
+}
