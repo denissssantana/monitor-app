@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MONITOR — Dashboard</title>
+  <script>
+    (function () {
+      var theme = localStorage.getItem("monitor_theme") || "dark";
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="topbar__title">Dashboard</h1>
+    <div class="topbar__actions">
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Alternar tema">
+        <svg class="icon-sun" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path>
+        </svg>
+      </button>
+      <button
+        id="menu-toggle"
+        class="hamburger"
+        type="button"
+        aria-label="Abrir menu"
+        aria-expanded="false"
+        aria-controls="nav-menu"
+      >
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <div id="nav-overlay" class="nav-overlay"></div>
+  <nav id="nav-menu" class="nav-menu" aria-hidden="true">
+    <p class="nav-menu__title">Menu</p>
+    <a href="dashboard.html" class="nav-menu__link nav-menu__link--active">Dashboard</a>
+    <a href="dados-pessoais.html" class="nav-menu__link">Dados Pessoais</a>
+    <a href="imc.html" class="nav-menu__link">IMC</a>
+    <a href="registro-alimentar.html" class="nav-menu__link">Registro Alimentar</a>
+    <a href="exercicio-fisico.html" class="nav-menu__link">Exercício Físico</a>
+    <button id="menu-sair" class="nav-menu__link nav-menu__link--exit" type="button">Sair</button>
+  </nav>
+
+  <main class="container container--wide">
+    <div class="dashboard-grid">
+      <section class="dashboard-box dashboard-box--user">
+        <p class="dashboard-user__label">Bem-vindo(a)</p>
+        <h2 id="dashboard-user-nome" class="dashboard-user__nome">Usuário</h2>
+        <a id="dashboard-user-caption" href="dados-pessoais.html" class="dashboard-user__caption hidden">Cadastre seus dados pessoais.</a>
+      </section>
+
+      <section class="dashboard-box">
+        <a href="imc.html" class="dashboard-box__title">IMC</a>
+        <canvas id="grafico-imc-dash" height="180"></canvas>
+        <p id="imc-dash-empty" class="chart-empty hidden">Sem dados ainda.</p>
+      </section>
+
+      <section class="dashboard-box">
+        <a href="registro-alimentar.html" class="dashboard-box__title">Alimentação</a>
+        <p class="kcal-overview__value">
+          <span id="dash-kcal-value">0</span><span class="kcal-overview__meta"> / <span id="dash-kcal-meta">--</span> kcal</span>
+        </p>
+        <div class="progress-bar-horizontal">
+          <div class="progress-bar-horizontal__track">
+            <div id="dash-kcal-fill" class="progress-bar-horizontal__fill" style="width: 0%"></div>
+          </div>
+        </div>
+        <div class="macro-squares">
+          <div class="total-card">
+            <p class="total-card__label">PT</p>
+            <p id="dash-total-pt" class="total-card__value">0</p>
+          </div>
+          <div class="total-card">
+            <p class="total-card__label">CH</p>
+            <p id="dash-total-ch" class="total-card__value">0</p>
+          </div>
+          <div class="total-card">
+            <p class="total-card__label">LP</p>
+            <p id="dash-total-lp" class="total-card__value">0</p>
+          </div>
+        </div>
+        <p id="alimentacao-dash-empty" class="section-empty hidden">Nenhum alimento registrado hoje.</p>
+      </section>
+
+      <section class="dashboard-box">
+        <a href="exercicio-fisico.html" class="dashboard-box__title">Exercício Físico</a>
+        <canvas id="grafico-exercicio-dash" height="180"></canvas>
+        <p id="exercicio-dash-empty" class="chart-empty hidden">Nenhum período cadastrado ainda.</p>
+      </section>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/menu.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

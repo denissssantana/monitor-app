@@ -47,6 +47,7 @@
   <div id="nav-overlay" class="nav-overlay"></div>
   <nav id="nav-menu" class="nav-menu" aria-hidden="true">
     <p class="nav-menu__title">Menu</p>
+    <a href="dashboard.html" class="nav-menu__link">Dashboard</a>
     <a href="dados-pessoais.html" class="nav-menu__link">Dados Pessoais</a>
     <a href="imc.html" class="nav-menu__link">IMC</a>
     <a href="registro-alimentar.html" class="nav-menu__link nav-menu__link--active">Registro Alimentar</a>
@@ -55,22 +56,36 @@
   </nav>
 
   <main class="container">
-    <section class="totals-grid">
-      <div class="total-card">
-        <p class="total-card__label">PT</p>
-        <p id="total-pt" class="total-card__value">0</p>
+    <section class="kcal-overview">
+      <div class="kcal-overview__header">
+        <p class="kcal-overview__title">Kcal Hoje</p>
+        <button type="button" id="btn-editar-meta" class="icon-btn icon-btn--edit" aria-label="Editar meta de Kcal">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+        </button>
       </div>
-      <div class="total-card">
-        <p class="total-card__label">CH</p>
-        <p id="total-ch" class="total-card__value">0</p>
+      <p class="kcal-overview__value">
+        <span id="total-kcal">0</span><span class="kcal-overview__meta"> / <span id="meta-kcal-label">--</span> kcal</span>
+      </p>
+      <div class="progress-bar-horizontal">
+        <div class="progress-bar-horizontal__track">
+          <div id="kcal-progress-fill" class="progress-bar-horizontal__fill" style="width: 0%"></div>
+        </div>
       </div>
-      <div class="total-card">
-        <p class="total-card__label">LP</p>
-        <p id="total-lp" class="total-card__value">0</p>
-      </div>
-      <div class="total-card">
-        <p class="total-card__label">Kcal</p>
-        <p id="total-kcal" class="total-card__value">0</p>
+      <p id="meta-kcal-empty" class="form-feedback hidden">Defina sua meta diária para acompanhar o progresso.</p>
+
+      <div class="macro-squares">
+        <div class="total-card">
+          <p class="total-card__label">PT</p>
+          <p id="total-pt" class="total-card__value">0</p>
+        </div>
+        <div class="total-card">
+          <p class="total-card__label">CH</p>
+          <p id="total-ch" class="total-card__value">0</p>
+        </div>
+        <div class="total-card">
+          <p class="total-card__label">LP</p>
+          <p id="total-lp" class="total-card__value">0</p>
+        </div>
       </div>
     </section>
 
@@ -88,53 +103,191 @@
 
       <div class="actions">
         <button type="submit" class="btn btn-primary btn-block">Adicionar Refeição</button>
-        <button type="button" id="btn-cadastrar-alimento" class="btn btn-secondary btn-block">Cadastrar Alimento</button>
       </div>
     </form>
 
     <div id="refeicoes-container"></div>
     <p id="refeicoes-empty" class="section-empty">Nenhuma refeição registrada hoje. Adicione a primeira acima.</p>
 
+    <details class="alimentos-base-card">
+      <summary class="alimentos-base-card__summary">Cadastro de Alimento (base)</summary>
+      <div class="alimentos-base-card__body">
+        <form id="form-cadastro-alimento" novalidate>
+          <div class="field">
+            <label for="cadastro-nome">Nome do alimento/prato</label>
+            <input type="text" id="cadastro-nome" name="cadastro-nome" required />
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="cadastro-quantidade">Quantidade de referência</label>
+              <input type="number" id="cadastro-quantidade" step="0.1" min="0" inputmode="decimal" required />
+            </div>
+            <div class="field">
+              <label for="cadastro-unidade">Unidade</label>
+              <select id="cadastro-unidade">
+                <option value="g">g</option>
+                <option value="ml">ml</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="macro-grid">
+            <div class="field">
+              <label for="cadastro-kcal">Kcal</label>
+              <input type="number" id="cadastro-kcal" step="1" min="0" inputmode="decimal" />
+            </div>
+            <div class="field">
+              <label for="cadastro-pt">PT</label>
+              <input type="number" id="cadastro-pt" step="0.1" min="0" inputmode="decimal" />
+            </div>
+            <div class="field">
+              <label for="cadastro-ch">CH</label>
+              <input type="number" id="cadastro-ch" step="0.1" min="0" inputmode="decimal" />
+            </div>
+            <div class="field">
+              <label for="cadastro-lp">LP</label>
+              <input type="number" id="cadastro-lp" step="0.1" min="0" inputmode="decimal" />
+            </div>
+          </div>
+
+          <p id="cadastro-alimento-feedback" class="form-feedback"></p>
+
+          <div class="actions">
+            <button type="submit" class="btn btn-primary btn-block">Salvar Alimento</button>
+          </div>
+        </form>
+
+        <ul id="alimentos-base-lista" class="record-list"></ul>
+        <p id="alimentos-base-lista-empty" class="section-empty hidden">Nenhum alimento cadastrado ainda.</p>
+      </div>
+    </details>
+
     <div class="actions">
-      <a href="dados-pessoais.html" class="btn btn-secondary btn-block">Voltar</a>
+      <a href="dashboard.html" class="btn btn-secondary btn-block">Voltar</a>
     </div>
   </main>
 
   <datalist id="datalist-alimentos"></datalist>
 
-  <div id="modal-cadastro-alimento" class="modal-overlay hidden">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-cadastro-alimento-title">
-      <h2 id="modal-cadastro-alimento-title" class="modal__title">Cadastrar Alimento</h2>
-      <form id="form-cadastro-alimento" novalidate>
+  <div id="modal-meta-kcal" class="modal-overlay hidden">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-meta-kcal-title">
+      <h2 id="modal-meta-kcal-title" class="modal__title">Meta Diária de Kcal</h2>
+      <form id="form-meta-kcal" novalidate>
         <div class="field">
-          <label for="cadastro-nome">Nome do alimento/prato</label>
-          <input type="text" id="cadastro-nome" name="cadastro-nome" required />
+          <label for="meta-kcal-input">Kcal por dia</label>
+          <input type="number" id="meta-kcal-input" step="1" min="1" inputmode="decimal" required />
+        </div>
+
+        <p id="meta-kcal-feedback" class="form-feedback"></p>
+
+        <div class="actions">
+          <button type="submit" class="btn btn-primary btn-block">Salvar</button>
+          <button type="button" id="btn-cancelar-meta" class="btn btn-secondary btn-block">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modal-editar-alimento" class="modal-overlay hidden">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-editar-alimento-title">
+      <h2 id="modal-editar-alimento-title" class="modal__title">Editar Alimento</h2>
+      <form id="form-editar-alimento" novalidate>
+        <div class="field">
+          <label for="editar-alimento-nome">Nome do alimento/prato</label>
+          <input type="text" id="editar-alimento-nome" required />
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="editar-alimento-quantidade">Quantidade de referência</label>
+            <input type="number" id="editar-alimento-quantidade" step="0.1" min="0" inputmode="decimal" required />
+          </div>
+          <div class="field">
+            <label for="editar-alimento-unidade">Unidade</label>
+            <select id="editar-alimento-unidade">
+              <option value="g">g</option>
+              <option value="ml">ml</option>
+            </select>
+          </div>
         </div>
 
         <div class="macro-grid">
           <div class="field">
-            <label for="cadastro-pt">PT</label>
-            <input type="number" id="cadastro-pt" step="0.1" min="0" inputmode="decimal" />
+            <label for="editar-alimento-kcal">Kcal</label>
+            <input type="number" id="editar-alimento-kcal" step="1" min="0" inputmode="decimal" />
           </div>
           <div class="field">
-            <label for="cadastro-ch">CH</label>
-            <input type="number" id="cadastro-ch" step="0.1" min="0" inputmode="decimal" />
+            <label for="editar-alimento-pt">PT</label>
+            <input type="number" id="editar-alimento-pt" step="0.1" min="0" inputmode="decimal" />
           </div>
           <div class="field">
-            <label for="cadastro-lp">LP</label>
-            <input type="number" id="cadastro-lp" step="0.1" min="0" inputmode="decimal" />
+            <label for="editar-alimento-ch">CH</label>
+            <input type="number" id="editar-alimento-ch" step="0.1" min="0" inputmode="decimal" />
           </div>
           <div class="field">
-            <label for="cadastro-kcal">Kcal</label>
-            <input type="number" id="cadastro-kcal" step="1" min="0" inputmode="decimal" />
+            <label for="editar-alimento-lp">LP</label>
+            <input type="number" id="editar-alimento-lp" step="0.1" min="0" inputmode="decimal" />
           </div>
         </div>
 
-        <p id="cadastro-alimento-feedback" class="form-feedback"></p>
+        <p id="editar-alimento-feedback" class="form-feedback"></p>
 
         <div class="actions">
           <button type="submit" class="btn btn-primary btn-block">Salvar</button>
-          <button type="button" id="btn-cancelar-cadastro" class="btn btn-secondary btn-block">Cancelar</button>
+          <button type="button" id="btn-cancelar-edicao-alimento" class="btn btn-secondary btn-block">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modal-editar-item-refeicao" class="modal-overlay hidden">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-editar-item-refeicao-title">
+      <h2 id="modal-editar-item-refeicao-title" class="modal__title">Editar Alimento da Refeição</h2>
+      <form id="form-editar-item-refeicao" novalidate>
+        <div class="field">
+          <label for="editar-item-nome">Alimento</label>
+          <input type="text" id="editar-item-nome" required />
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="editar-item-quantidade">Quantidade</label>
+            <input type="number" id="editar-item-quantidade" step="0.1" min="0" inputmode="decimal" required />
+          </div>
+          <div class="field">
+            <label for="editar-item-unidade">Unidade</label>
+            <select id="editar-item-unidade">
+              <option value="g">g</option>
+              <option value="ml">ml</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="macro-grid">
+          <div class="field">
+            <label for="editar-item-kcal">Kcal</label>
+            <input type="number" id="editar-item-kcal" step="1" min="0" inputmode="decimal" />
+          </div>
+          <div class="field">
+            <label for="editar-item-pt">PT</label>
+            <input type="number" id="editar-item-pt" step="0.1" min="0" inputmode="decimal" />
+          </div>
+          <div class="field">
+            <label for="editar-item-ch">CH</label>
+            <input type="number" id="editar-item-ch" step="0.1" min="0" inputmode="decimal" />
+          </div>
+          <div class="field">
+            <label for="editar-item-lp">LP</label>
+            <input type="number" id="editar-item-lp" step="0.1" min="0" inputmode="decimal" />
+          </div>
+        </div>
+
+        <p id="editar-item-feedback" class="form-feedback"></p>
+
+        <div class="actions">
+          <button type="submit" class="btn btn-primary btn-block">Salvar</button>
+          <button type="button" id="btn-cancelar-edicao-item" class="btn btn-secondary btn-block">Cancelar</button>
         </div>
       </form>
     </div>

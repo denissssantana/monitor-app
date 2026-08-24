@@ -544,6 +544,24 @@ a {
   margin-bottom: 0.75rem;
 }
 
+.list-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.list-card__header .list-card__title {
+  margin-bottom: 0;
+}
+
+.list-card__header .btn {
+  width: auto;
+  padding: 0.6rem 1rem;
+  font-size: 0.8rem;
+}
+
 .record-list {
   list-style: none;
   margin: 0;
@@ -659,6 +677,65 @@ a {
   line-height: 1;
 }
 
+/* ---------- Kcal em destaque + barra horizontal ---------- */
+.kcal-overview {
+  margin-top: 1.5rem;
+  background: var(--bg-elevated);
+  border: 2px solid var(--border);
+  padding: 1.25rem;
+}
+
+.kcal-overview__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.kcal-overview__title {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.kcal-overview__value {
+  margin: 0.5rem 0 0.75rem;
+  font-family: var(--font-mega);
+  font-size: 2.2rem;
+  color: var(--accent-action);
+  line-height: 1;
+}
+
+.kcal-overview__meta {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin-left: 0.3rem;
+}
+
+.progress-bar-horizontal__track {
+  width: 100%;
+  height: 14px;
+  background: var(--bg-input);
+  border: 2px solid var(--border-strong);
+}
+
+.progress-bar-horizontal__fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent-action);
+  transition: width 0.3s ease;
+}
+
+.macro-squares {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
 /* ---------- Refeições / alimentos ---------- */
 .meal-block {
   margin-top: 1.25rem;
@@ -712,9 +789,23 @@ a {
   letter-spacing: 0.02em;
 }
 
+.food-item__nome small {
+  font-family: var(--font-body);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0;
+  margin-left: 0.3rem;
+}
+
 .food-item__macros {
   font-size: 0.75rem;
   color: var(--text-muted);
+}
+
+.food-item__actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
 }
 
 .food-form {
@@ -730,6 +821,59 @@ a {
 
 .macro-grid .field {
   margin-bottom: 0;
+}
+
+.field-row {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 1.1rem;
+}
+
+.field-row .field {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+/* ---------- Cadastro de Alimento (base, compacto) ---------- */
+.alimentos-base-card {
+  margin-top: 1.5rem;
+  background: var(--bg-elevated);
+  border: 2px solid var(--border);
+  padding: 1rem;
+}
+
+.alimentos-base-card__summary {
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.alimentos-base-card__summary::marker,
+.alimentos-base-card__summary::-webkit-details-marker {
+  display: none;
+}
+
+.alimentos-base-card__summary::before {
+  content: "+ ";
+  color: var(--accent-action);
+}
+
+.alimentos-base-card[open] .alimentos-base-card__summary::before {
+  content: "− ";
+}
+
+.alimentos-base-card__body {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 2px solid var(--border);
+}
+
+.alimentos-base-card__body .record-list {
+  margin-top: 1rem;
 }
 
 .section-empty {
@@ -937,6 +1081,95 @@ a {
   color: var(--text-muted);
 }
 
+/* ---------- Dashboard ---------- */
+.dashboard-grid {
+  margin-top: 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+.dashboard-box {
+  background: var(--bg-elevated);
+  border: 2px solid var(--border);
+  padding: 1.25rem;
+}
+
+.dashboard-box__title {
+  display: inline-block;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 1.05rem;
+  color: var(--text);
+  text-decoration: none;
+  margin-bottom: 1rem;
+  padding-bottom: 0.15rem;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.dashboard-box__title:hover,
+.dashboard-box__title:focus-visible {
+  color: var(--accent-action);
+  border-color: var(--accent-action);
+}
+
+.dashboard-box__title:active {
+  color: var(--accent-action-strong);
+  border-color: var(--accent-action-strong);
+}
+
+.dashboard-box .totals-grid,
+.dashboard-box .kcal-overview__value,
+.dashboard-box .macro-squares {
+  margin-top: 0;
+}
+
+.dashboard-box .chart-empty,
+.dashboard-box .section-empty {
+  margin-top: 0;
+}
+
+.dashboard-box--user {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.35rem;
+  border-color: var(--accent-olive);
+}
+
+.dashboard-user__label {
+  margin: 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+}
+
+.dashboard-user__nome {
+  margin: 0;
+  font-family: var(--font-mega);
+  font-size: 2rem;
+  letter-spacing: 0.03em;
+  color: var(--accent-action);
+}
+
+.dashboard-user__caption {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-decoration: underline;
+}
+
+.dashboard-user__caption:hover,
+.dashboard-user__caption:focus-visible {
+  color: var(--accent-action);
+}
+
 /* ---------- Desktop ---------- */
 @media (min-width: 768px) {
   .card {
@@ -970,5 +1203,15 @@ a {
 
   .progress-bar-vertical__track {
     height: 320px;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1100px) {
+  .container--wide {
+    max-width: 900px;
   }
 }

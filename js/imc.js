@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const listaEmptyEl = document.getElementById("imc-lista-empty");
   const modalEditar = document.getElementById("modal-editar-imc");
   const formEditar = document.getElementById("form-editar-imc");
+  const editarDataInput = document.getElementById("editar-data");
   const editarPesoInput = document.getElementById("editar-peso");
   const editarAlturaInput = document.getElementById("editar-altura");
   const editarFeedback = document.getElementById("editar-imc-feedback");
@@ -31,6 +32,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   dataInput.value = hojeIso();
+
+  function prefillAltura() {
+    const altura = getAlturaAtual();
+    alturaInput.value = altura ? altura : "";
+  }
+
+  prefillAltura();
 
   function classificarImc(imc) {
     if (imc < 18.5) return "Abaixo do peso";
@@ -51,9 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderGrafico() {
-    const historico = getHistoricoImc()
-      .slice()
-      .sort((a, b) => a.data.localeCompare(b.data));
+    const historico = getHistoricoImcOrdenado();
 
     if (historico.length === 0) {
       chartCanvas.classList.add("hidden");
@@ -104,9 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderLista() {
-    const historico = getHistoricoImc()
-      .slice()
-      .sort((a, b) => a.data.localeCompare(b.data));
+    const historico = getHistoricoImcOrdenado();
 
     listaEl.innerHTML = "";
 
@@ -141,6 +145,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const registro = getHistoricoImc().find((item) => item.id === id);
     if (!registro) return;
     editandoId = id;
+    editarDataInput.value = registro.data;
     editarPesoInput.value = registro.peso;
     editarAlturaInput.value = registro.altura;
     editarFeedback.textContent = "";
@@ -181,9 +186,14 @@ document.addEventListener("DOMContentLoaded", () => {
     event.preventDefault();
     editarFeedback.textContent = "";
 
+    const data = editarDataInput.value;
     const peso = parseFloat(editarPesoInput.value);
     const alturaCm = parseFloat(editarAlturaInput.value);
 
+    if (!data) {
+      editarFeedback.textContent = "Informe a data.";
+      return;
+    }
     if (!peso || peso <= 0) {
       editarFeedback.textContent = "Informe um peso válido.";
       return;
@@ -198,7 +208,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const imc = Math.round(imcBruto * 10) / 10;
     const classificacao = classificarImc(imcBruto);
 
-    updateRegistroImc(editandoId, { peso, altura: alturaCm, imc, classificacao });
+    updateRegistroImc(editandoId, { data, peso, altura: alturaCm, imc, classificacao });
+    setAlturaAtual(alturaCm);
+    prefillAltura();
 
     fecharModalEdicao();
     renderLista();
@@ -208,6 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function resetarFormulario() {
     form.reset();
     dataInput.value = hojeIso();
+    prefillAltura();
     feedback.textContent = "";
   }
 
@@ -245,6 +258,7 @@ document.addEventListener("DOMContentLoaded", () => {
       imc,
       classificacao,
     });
+    setAlturaAtual(alturaCm);
 
     renderLista();
     renderGrafico();

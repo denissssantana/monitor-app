@@ -36,15 +36,32 @@
          id: string,
          titulo: string,          // "Café da Manhã" | "Lanche" | "Almoço" | "Jantar" | "Ceia"
          itens: [
-           { id: string, nome: string, pt: number, ch: number, lp: number, kcal: number }
+           {
+             id: string,
+             nome: string,
+             quantidade: number,        // quantidade real consumida
+             unidade: "g" | "ml",
+             pt: number, ch: number, lp: number, kcal: number,
+             // valores ABSOLUTOS já referentes à quantidade consumida
+             // (se veio da base, já escalados a partir da referência;
+             // se digitado livre, o valor informado pelo usuário)
+             alimentoBaseId: string | null   // origem na base, se houver
+           }
          ]
        }
      ]
    }
 
-   monitor_alimentos_cadastrados → array de alimentos/pratos cadastrados
+   monitor_alimentos_base → array da base reutilizável de alimentos/pratos
    [
-     { id: string, nome: string, pt: number, ch: number, lp: number, kcal: number }
+     {
+       id: string,
+       nome: string,
+       quantidadeReferencia: number,  // ex.: 100
+       unidade: "g" | "ml",
+       pt: number, ch: number, lp: number, kcal: number
+       // valores nutricionais correspondentes à quantidadeReferencia
+     }
    ]
 
    monitor_config_exercicio → objeto único
@@ -75,6 +92,17 @@
 
    monitor_indice_periodo_exibido → string (id do período mostrado
    no carrossel da tela de Exercício Físico) ou null
+
+   monitor_altura_atual → number (cm) ou null
+   Altura é um dado fixo, editável mas não solicitado a cada novo
+   registro de IMC. Cada registro do histórico ainda guarda sua
+   própria altura (necessária para o cálculo daquele IMC), mas o
+   formulário de novo registro é pré-preenchido com este valor.
+
+   monitor_meta_kcal_dia → number (kcal) ou null
+   Meta diária de Kcal, definida uma vez e reaproveitada em todos
+   os dias até o usuário alterá-la. Base do percentual exibido nas
+   barras de status de Alimentação (tela e Dashboard).
    ========================================================= */
 
 const STORAGE_KEYS = {
@@ -82,10 +110,12 @@ const STORAGE_KEYS = {
   HISTORICO_IMC: "monitor_historico_imc",
   THEME: "monitor_theme",
   REGISTRO_ALIMENTAR: "monitor_registro_alimentar",
-  ALIMENTOS_CADASTRADOS: "monitor_alimentos_cadastrados",
+  ALIMENTOS_BASE: "monitor_alimentos_base",
   CONFIG_EXERCICIO: "monitor_config_exercicio",
   PERIODOS_EXERCICIO: "monitor_periodos_exercicio",
   INDICE_PERIODO_EXIBIDO: "monitor_indice_periodo_exibido",
+  ALTURA_ATUAL: "monitor_altura_atual",
+  META_KCAL_DIA: "monitor_meta_kcal_dia",
 };
 
 function getDadosPessoais() {
@@ -95,6 +125,11 @@ function getDadosPessoais() {
 
 function saveDadosPessoais(dados) {
   localStorage.setItem(STORAGE_KEYS.DADOS_PESSOAIS, JSON.stringify(dados));
+}
+
+function getNomeUsuario() {
+  const dados = getDadosPessoais();
+  return dados && dados.nome ? dados.nome : "";
 }
 
 function getHistoricoImc() {
@@ -137,6 +172,34 @@ function deleteRegistroImc(id) {
   return historico;
 }
 
+function getHistoricoImcOrdenado() {
+  return getHistoricoImc()
+    .slice()
+    .sort((a, b) => a.data.localeCompare(b.data));
+}
+
+function getUltimoRegistroImc() {
+  const historico = getHistoricoImcOrdenado();
+  return historico.length > 0 ? historico[historico.length - 1] : null;
+}
+
+function getAlturaAtual() {
+  const raw = localStorage.getItem(STORAGE_KEYS.ALTURA_ATUAL);
+  if (raw !== null) return parseFloat(raw);
+
+  const ultimoRegistro = getUltimoRegistroImc();
+  if (ultimoRegistro) {
+    setAlturaAtual(ultimoRegistro.altura);
+    return ultimoRegistro.altura;
+  }
+
+  return null;
+}
+
+function setAlturaAtual(altura) {
+  localStorage.setItem(STORAGE_KEYS.ALTURA_ATUAL, String(altura));
+}
+
 function getRegistroAlimentarDia(dataIso) {
   const raw = localStorage.getItem(STORAGE_KEYS.REGISTRO_ALIMENTAR);
   const registroCompleto = raw ? JSON.parse(raw) : {};
@@ -150,22 +213,92 @@ function saveRegistroAlimentarDia(dataIso, refeicoes) {
   localStorage.setItem(STORAGE_KEYS.REGISTRO_ALIMENTAR, JSON.stringify(registroCompleto));
 }
 
-function getAlimentosCadastrados() {
-  const raw = localStorage.getItem(STORAGE_KEYS.ALIMENTOS_CADASTRADOS);
+function adicionarAlimentoNaRefeicao(dataIso, refeicaoId, item) {
+  const refeicoes = getRegistroAlimentarDia(dataIso);
+  const refeicao = refeicoes.find((r) => r.id === refeicaoId);
+  if (!refeicao) return refeicoes;
+  refeicao.itens.push(item);
+  saveRegistroAlimentarDia(dataIso, refeicoes);
+  return refeicoes;
+}
+
+function editarAlimentoDaRefeicao(dataIso, refeicaoId, itemId, novosValores) {
+  const refeicoes = getRegistroAlimentarDia(dataIso);
+  const refeicao = refeicoes.find((r) => r.id === refeicaoId);
+  if (!refeicao) return refeicoes;
+  const index = refeicao.itens.findIndex((item) => item.id === itemId);
+  if (index === -1) return refeicoes;
+  refeicao.itens[index] = { ...refeicao.itens[index], ...novosValores, id: itemId };
+  saveRegistroAlimentarDia(dataIso, refeicoes);
+  return refeicoes;
+}
+
+function excluirAlimentoDaRefeicao(dataIso, refeicaoId, itemId) {
+  const refeicoes = getRegistroAlimentarDia(dataIso);
+  const refeicao = refeicoes.find((r) => r.id === refeicaoId);
+  if (!refeicao) return refeicoes;
+  refeicao.itens = refeicao.itens.filter((item) => item.id !== itemId);
+  saveRegistroAlimentarDia(dataIso, refeicoes);
+  return refeicoes;
+}
+
+function getTotaisAlimentaresDoDia(dataIso) {
+  const refeicoes = getRegistroAlimentarDia(dataIso);
+  const totais = { pt: 0, ch: 0, lp: 0, kcal: 0, temRegistros: false };
+
+  refeicoes.forEach((refeicao) => {
+    refeicao.itens.forEach((item) => {
+      totais.pt += Number(item.pt) || 0;
+      totais.ch += Number(item.ch) || 0;
+      totais.lp += Number(item.lp) || 0;
+      totais.kcal += Number(item.kcal) || 0;
+      totais.temRegistros = true;
+    });
+  });
+
+  return totais;
+}
+
+function getMetaKcalDia() {
+  const raw = localStorage.getItem(STORAGE_KEYS.META_KCAL_DIA);
+  return raw !== null ? parseFloat(raw) : null;
+}
+
+function setMetaKcalDia(valor) {
+  localStorage.setItem(STORAGE_KEYS.META_KCAL_DIA, String(valor));
+}
+
+function getAlimentosBase() {
+  const raw = localStorage.getItem(STORAGE_KEYS.ALIMENTOS_BASE);
   return raw ? JSON.parse(raw) : [];
 }
 
-function addAlimentoCadastrado(alimento) {
-  const alimentos = getAlimentosCadastrados();
+function salvarAlimentoBase(alimento) {
+  const alimentos = getAlimentosBase();
   alimentos.push(alimento);
-  localStorage.setItem(STORAGE_KEYS.ALIMENTOS_CADASTRADOS, JSON.stringify(alimentos));
+  localStorage.setItem(STORAGE_KEYS.ALIMENTOS_BASE, JSON.stringify(alimentos));
   return alimentos;
 }
 
-function buscarAlimento(query) {
+function editarAlimentoBase(id, novosValores) {
+  const alimentos = getAlimentosBase();
+  const index = alimentos.findIndex((alimento) => alimento.id === id);
+  if (index === -1) return alimentos;
+  alimentos[index] = { ...alimentos[index], ...novosValores, id };
+  localStorage.setItem(STORAGE_KEYS.ALIMENTOS_BASE, JSON.stringify(alimentos));
+  return alimentos;
+}
+
+function excluirAlimentoBase(id) {
+  const alimentos = getAlimentosBase().filter((alimento) => alimento.id !== id);
+  localStorage.setItem(STORAGE_KEYS.ALIMENTOS_BASE, JSON.stringify(alimentos));
+  return alimentos;
+}
+
+function buscarAlimentoBase(query) {
   const termo = query.trim().toLowerCase();
   if (!termo) return [];
-  return getAlimentosCadastrados().filter((alimento) => alimento.nome.toLowerCase().includes(termo));
+  return getAlimentosBase().filter((alimento) => alimento.nome.toLowerCase().includes(termo));
 }
 
 function getConfigExercicio() {
@@ -184,6 +317,22 @@ function getPeriodosExercicio() {
 
 function savePeriodosExercicio(periodos) {
   localStorage.setItem(STORAGE_KEYS.PERIODOS_EXERCICIO, JSON.stringify(periodos));
+}
+
+function getPeriodosParaGrafico() {
+  return getPeriodosExercicio()
+    .slice()
+    .sort((a, b) => a.dataInicio.localeCompare(b.dataInicio))
+    .map((periodo) => {
+      let total = 0;
+      let concluidos = 0;
+      periodo.atividades.forEach((atividade) => {
+        total += atividade.treinos.length;
+        concluidos += atividade.treinos.filter((treino) => treino.concluido).length;
+      });
+      const percentual = total === 0 ? 0 : Math.round((concluidos / total) * 1000) / 10;
+      return { id: periodo.id, dataInicio: periodo.dataInicio, dataFim: periodo.dataFim, percentual };
+    });
 }
 
 function getIndicePeriodoExibido() {
