@@ -8,14 +8,23 @@ document.addEventListener("DOMContentLoaded", () => {
   const pesoInput = document.getElementById("peso");
   const alturaInput = document.getElementById("altura");
   const feedback = document.getElementById("imc-feedback");
-  const resultado = document.getElementById("imc-resultado");
-  const resultadoValor = document.getElementById("imc-valor");
-  const resultadoClassificacao = document.getElementById("imc-classificacao");
   const btnNovoCalculo = document.getElementById("btn-novo-calculo");
   const chartCanvas = document.getElementById("grafico-imc");
   const chartEmpty = document.getElementById("chart-empty");
+  const listaEl = document.getElementById("imc-lista");
+  const listaEmptyEl = document.getElementById("imc-lista-empty");
+  const modalEditar = document.getElementById("modal-editar-imc");
+  const formEditar = document.getElementById("form-editar-imc");
+  const editarPesoInput = document.getElementById("editar-peso");
+  const editarAlturaInput = document.getElementById("editar-altura");
+  const editarFeedback = document.getElementById("editar-imc-feedback");
+  const btnCancelarEdicao = document.getElementById("btn-cancelar-edicao");
+
+  const ICON_EDITAR = `<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>`;
+  const ICON_EXCLUIR = `<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>`;
 
   let chart = null;
+  let editandoId = null;
 
   function hojeIso() {
     return new Date().toISOString().slice(0, 10);
@@ -30,13 +39,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (imc < 35) return "Obesidade Grau I";
     if (imc < 40) return "Obesidade Grau II";
     return "Obesidade Grau III";
-  }
-
-  function corParaImc(imc) {
-    if (imc < 18.5) return getComputedColor("--accent-warning");
-    if (imc < 25) return getComputedColor("--accent-success");
-    if (imc < 30) return getComputedColor("--accent-warning");
-    return getComputedColor("--accent-action");
   }
 
   function getComputedColor(varName) {
@@ -101,10 +103,112 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function limparResultado() {
-    resultado.classList.add("hidden");
-    resultadoValor.textContent = "";
-    resultadoClassificacao.textContent = "";
+  function renderLista() {
+    const historico = getHistoricoImc()
+      .slice()
+      .sort((a, b) => a.data.localeCompare(b.data));
+
+    listaEl.innerHTML = "";
+
+    if (historico.length === 0) {
+      listaEl.classList.add("hidden");
+      listaEmptyEl.classList.remove("hidden");
+      return;
+    }
+
+    listaEl.classList.remove("hidden");
+    listaEmptyEl.classList.add("hidden");
+
+    historico.forEach((registro) => {
+      const li = document.createElement("li");
+      li.className = "record-item";
+      li.dataset.id = registro.id;
+      li.innerHTML = `
+        <div class="record-item__info">
+          <span class="record-item__data">${formatarDataBR(registro.data)}</span>
+          <span class="record-item__valor">IMC ${registro.imc.toFixed(1)}<small>(${registro.classificacao})</small></span>
+        </div>
+        <div class="record-item__actions">
+          <button type="button" class="icon-btn icon-btn--edit" data-action="editar" aria-label="Editar registro">${ICON_EDITAR}</button>
+          <button type="button" class="icon-btn icon-btn--delete" data-action="excluir" aria-label="Excluir registro">${ICON_EXCLUIR}</button>
+        </div>
+      `;
+      listaEl.appendChild(li);
+    });
+  }
+
+  function abrirModalEdicao(id) {
+    const registro = getHistoricoImc().find((item) => item.id === id);
+    if (!registro) return;
+    editandoId = id;
+    editarPesoInput.value = registro.peso;
+    editarAlturaInput.value = registro.altura;
+    editarFeedback.textContent = "";
+    modalEditar.classList.remove("hidden");
+  }
+
+  function fecharModalEdicao() {
+    modalEditar.classList.add("hidden");
+    editandoId = null;
+  }
+
+  function excluirRegistro(id) {
+    if (!confirm("Excluir este registro de IMC?")) return;
+    deleteRegistroImc(id);
+    renderLista();
+    renderGrafico();
+  }
+
+  listaEl.addEventListener("click", (event) => {
+    const btn = event.target.closest("button[data-action]");
+    if (!btn) return;
+    const id = btn.closest(".record-item").dataset.id;
+
+    if (btn.dataset.action === "editar") {
+      abrirModalEdicao(id);
+    } else if (btn.dataset.action === "excluir") {
+      excluirRegistro(id);
+    }
+  });
+
+  btnCancelarEdicao.addEventListener("click", fecharModalEdicao);
+
+  modalEditar.addEventListener("click", (event) => {
+    if (event.target === modalEditar) fecharModalEdicao();
+  });
+
+  formEditar.addEventListener("submit", (event) => {
+    event.preventDefault();
+    editarFeedback.textContent = "";
+
+    const peso = parseFloat(editarPesoInput.value);
+    const alturaCm = parseFloat(editarAlturaInput.value);
+
+    if (!peso || peso <= 0) {
+      editarFeedback.textContent = "Informe um peso válido.";
+      return;
+    }
+    if (!alturaCm || alturaCm <= 0) {
+      editarFeedback.textContent = "Informe uma altura válida.";
+      return;
+    }
+
+    const alturaM = alturaCm / 100;
+    const imcBruto = peso / (alturaM * alturaM);
+    const imc = Math.round(imcBruto * 10) / 10;
+    const classificacao = classificarImc(imcBruto);
+
+    updateRegistroImc(editandoId, { peso, altura: alturaCm, imc, classificacao });
+
+    fecharModalEdicao();
+    renderLista();
+    renderGrafico();
+  });
+
+  function resetarFormulario() {
+    form.reset();
+    dataInput.value = hojeIso();
+    feedback.textContent = "";
   }
 
   form.addEventListener("submit", (event) => {
@@ -142,20 +246,13 @@ document.addEventListener("DOMContentLoaded", () => {
       classificacao,
     });
 
-    resultadoValor.textContent = imc.toFixed(1);
-    resultadoValor.style.color = corParaImc(imcBruto);
-    resultadoClassificacao.textContent = classificacao;
-    resultado.classList.remove("hidden");
-
+    renderLista();
     renderGrafico();
+    resetarFormulario();
   });
 
-  btnNovoCalculo.addEventListener("click", () => {
-    form.reset();
-    dataInput.value = hojeIso();
-    feedback.textContent = "";
-    limparResultado();
-  });
+  btnNovoCalculo.addEventListener("click", resetarFormulario);
 
+  renderLista();
   renderGrafico();
 });

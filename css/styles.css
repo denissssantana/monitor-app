@@ -477,37 +477,6 @@ a {
   flex-direction: column;
 }
 
-/* ---------- Resultado de IMC ---------- */
-.imc-result {
-  margin-top: 1.5rem;
-  padding: 1.5rem;
-  background: var(--bg-elevated);
-  border: 2px solid var(--accent-olive);
-  text-align: center;
-}
-
-.imc-result__label {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  color: var(--text-muted);
-}
-
-.imc-result__value {
-  font-family: var(--font-mega);
-  font-size: clamp(4.5rem, 28vw, 7rem);
-  line-height: 1;
-  color: var(--accent-action);
-  margin: 0.25rem 0;
-}
-
-.imc-result__classificacao {
-  font-family: var(--font-display);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 1.2rem;
-}
-
 /* ---------- Gráfico ---------- */
 .chart-card {
   margin-top: 1.5rem;
@@ -531,6 +500,443 @@ a {
   padding: 1.5rem 0;
 }
 
+/* ---------- Modal ---------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  z-index: 50;
+}
+
+.modal {
+  width: 100%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--bg-elevated);
+  border: 2px solid var(--accent-olive);
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+.modal__title {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+/* ---------- Lista de registros ---------- */
+.list-card {
+  margin-top: 1.5rem;
+  background: var(--bg-elevated);
+  border: 2px solid var(--border);
+  padding: 1rem;
+}
+
+.list-card__title {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.record-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.record-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  background: var(--bg-input);
+  border: 2px solid var(--border);
+}
+
+.record-item__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.record-item__data {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.record-item__valor {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+}
+
+.record-item__valor small {
+  font-family: var(--font-body);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: 0.35rem;
+}
+
+.record-item__actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.icon-btn {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+  border: 2px solid var(--border-strong);
+  color: var(--text);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.icon-btn svg {
+  width: 1rem;
+  height: 1rem;
+  stroke: currentColor;
+  fill: none;
+}
+
+.icon-btn--edit:hover,
+.icon-btn--edit:focus-visible {
+  border-color: var(--accent-olive-strong);
+}
+
+.icon-btn--delete:hover,
+.icon-btn--delete:focus-visible {
+  border-color: var(--accent-action);
+  color: var(--accent-action);
+}
+
+/* ---------- Totais do dia (Registro Alimentar) ---------- */
+.totals-grid {
+  margin-top: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.total-card {
+  background: var(--bg-elevated);
+  border: 2px solid var(--border);
+  padding: 0.9rem;
+  text-align: center;
+}
+
+.total-card__label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+  margin-bottom: 0.3rem;
+}
+
+.total-card__value {
+  font-family: var(--font-mega);
+  font-size: 1.8rem;
+  color: var(--accent-action);
+  line-height: 1;
+}
+
+/* ---------- Refeições / alimentos ---------- */
+.meal-block {
+  margin-top: 1.25rem;
+  background: var(--bg-elevated);
+  border: 2px solid var(--border);
+  padding: 1rem;
+}
+
+.meal-block__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.meal-block__title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.food-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.food-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--bg-input);
+  border: 2px solid var(--border);
+}
+
+.food-item__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.food-item__nome {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+}
+
+.food-item__macros {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.food-form {
+  border-top: 2px solid var(--border);
+  padding-top: 0.9rem;
+}
+
+.macro-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem;
+}
+
+.macro-grid .field {
+  margin-bottom: 0;
+}
+
+.section-empty {
+  margin-top: 1.25rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 1.5rem 0;
+}
+
+/* ---------- Exercício Físico ---------- */
+.list-card__title .list-card__title-range {
+  font-family: var(--font-body);
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: 0.4rem;
+}
+
+.atividade-block {
+  margin-bottom: 1.25rem;
+}
+
+.atividade-block:last-child {
+  margin-bottom: 0;
+}
+
+.atividade-block__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.atividade-block__title {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.atividade-block__count {
+  font-family: var(--font-body);
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-left: 0.4rem;
+}
+
+.checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  background: var(--bg-input);
+  border: 2px solid var(--border);
+}
+
+.checklist-item__check {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.checklist-item__checkbox {
+  position: absolute;
+  width: 1.4rem;
+  height: 1.4rem;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.checklist-item__custom {
+  position: relative;
+  width: 1.4rem;
+  height: 1.4rem;
+  background: var(--bg-elevated);
+  border: 2px solid var(--border-strong);
+  flex-shrink: 0;
+}
+
+.checklist-item__custom::after {
+  content: "✓";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--on-accent);
+  opacity: 0;
+}
+
+.checklist-item__checkbox:checked + .checklist-item__custom {
+  background: var(--accent-olive-strong);
+  border-color: var(--accent-olive-strong);
+}
+
+.checklist-item__checkbox:checked + .checklist-item__custom::after {
+  opacity: 1;
+}
+
+.checklist-item__nome {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+}
+
+.checklist-item--concluido .checklist-item__nome {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.carousel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  touch-action: pan-y;
+}
+
+.carousel-header .icon-btn {
+  flex-shrink: 0;
+}
+
+.carousel-header__info {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+
+.carousel-header__info .list-card__title {
+  margin-bottom: 0.15rem;
+}
+
+.carousel-header__range {
+  font-family: var(--font-body);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.exercicio-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  touch-action: pan-y;
+}
+
+.exercicio-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.progress-bar-vertical {
+  position: sticky;
+  top: 5.5rem;
+  flex-shrink: 0;
+  width: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.progress-bar-vertical__track {
+  width: 100%;
+  height: 260px;
+  background: var(--bg-input);
+  border: 2px solid var(--border-strong);
+  display: flex;
+  align-items: flex-end;
+}
+
+.progress-bar-vertical__fill {
+  width: 100%;
+  height: 0%;
+  background: var(--accent-action);
+  transition: height 0.3s ease;
+}
+
+.progress-bar-vertical__label {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
 /* ---------- Desktop ---------- */
 @media (min-width: 768px) {
   .card {
@@ -548,5 +954,21 @@ a {
 
   .btn-block + .btn-block {
     margin-top: 0;
+  }
+
+  .totals-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .macro-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .progress-bar-vertical {
+    width: 4rem;
+  }
+
+  .progress-bar-vertical__track {
+    height: 320px;
   }
 }

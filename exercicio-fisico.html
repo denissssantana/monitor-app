@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MONITOR — Exercício Físico</title>
+  <script>
+    (function () {
+      var theme = localStorage.getItem("monitor_theme") || "dark";
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="topbar__title">Exercício Físico</h1>
+    <div class="topbar__actions">
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Alternar tema">
+        <svg class="icon-sun" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path>
+        </svg>
+      </button>
+      <button
+        id="menu-toggle"
+        class="hamburger"
+        type="button"
+        aria-label="Abrir menu"
+        aria-expanded="false"
+        aria-controls="nav-menu"
+      >
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <div id="nav-overlay" class="nav-overlay"></div>
+  <nav id="nav-menu" class="nav-menu" aria-hidden="true">
+    <p class="nav-menu__title">Menu</p>
+    <a href="dados-pessoais.html" class="nav-menu__link">Dados Pessoais</a>
+    <a href="imc.html" class="nav-menu__link">IMC</a>
+    <a href="registro-alimentar.html" class="nav-menu__link">Registro Alimentar</a>
+    <a href="exercicio-fisico.html" class="nav-menu__link nav-menu__link--active">Exercício Físico</a>
+    <button id="menu-sair" class="nav-menu__link nav-menu__link--exit" type="button">Sair</button>
+  </nav>
+
+  <main class="container">
+    <section class="card">
+      <div class="field">
+        <label for="tipo-periodo">Tipo de período</label>
+        <select id="tipo-periodo" name="tipo-periodo">
+          <option value="semanal">Semanal</option>
+          <option value="quinzenal">Quinzenal</option>
+          <option value="mensal">Mensal</option>
+        </select>
+      </div>
+
+      <form id="form-add-atividade" novalidate>
+        <div class="field">
+          <label for="atividade-nome">Atividade</label>
+          <input type="text" id="atividade-nome" name="atividade-nome" list="datalist-atividades" placeholder="Ex: Musculação" required />
+          <datalist id="datalist-atividades">
+            <option value="Caminhada"></option>
+            <option value="Musculação"></option>
+            <option value="Corrida"></option>
+            <option value="Yoga"></option>
+            <option value="Natação"></option>
+            <option value="Ciclismo"></option>
+            <option value="Funcional"></option>
+          </datalist>
+        </div>
+        <div class="field">
+          <label for="atividade-qtd">Quantidade de treinos no período</label>
+          <input type="number" id="atividade-qtd" name="atividade-qtd" min="1" step="1" value="1" required />
+        </div>
+        <p id="atividade-feedback" class="form-feedback"></p>
+        <div class="actions">
+          <button type="submit" class="btn btn-primary btn-block">Adicionar Atividade</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="carousel-periodo" class="list-card">
+      <div class="carousel-header">
+        <button type="button" id="btn-periodo-anterior" class="icon-btn" aria-label="Período anterior">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+        </button>
+        <div class="carousel-header__info">
+          <p class="list-card__title">Programação Atual</p>
+          <p id="periodo-range" class="carousel-header__range"></p>
+        </div>
+        <button type="button" id="btn-periodo-proximo" class="icon-btn" aria-label="Próximo período">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+        </button>
+      </div>
+
+      <div class="exercicio-layout">
+        <div class="exercicio-main">
+          <div id="atividades-container"></div>
+          <p id="atividades-empty" class="section-empty hidden">Nenhuma atividade cadastrada para este período.</p>
+        </div>
+
+        <aside class="progress-bar-vertical" aria-label="Progresso do período exibido">
+          <div class="progress-bar-vertical__track">
+            <div id="progress-fill" class="progress-bar-vertical__fill" style="height: 0%"></div>
+          </div>
+          <p id="progress-label" class="progress-bar-vertical__label">0%</p>
+        </aside>
+      </div>
+
+      <div class="actions">
+        <button type="button" id="btn-excluir-periodo" class="btn btn-secondary btn-block">Excluir Período</button>
+      </div>
+    </section>
+
+    <section class="chart-card">
+      <p class="chart-card__title">Evolução por Período</p>
+      <canvas id="grafico-exercicio" height="220"></canvas>
+      <p id="chart-exercicio-empty" class="chart-empty hidden">Nenhum período cadastrado ainda.</p>
+    </section>
+
+    <div class="actions">
+      <a href="dados-pessoais.html" class="btn btn-secondary btn-block">Voltar</a>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/menu.js"></script>
+  <script src="js/exercicio-fisico.js"></script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MONITOR — Registro Alimentar</title>
+  <script>
+    (function () {
+      var theme = localStorage.getItem("monitor_theme") || "dark";
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="topbar__title">Registro Alimentar</h1>
+    <div class="topbar__actions">
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Alternar tema">
+        <svg class="icon-sun" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path>
+        </svg>
+      </button>
+      <button
+        id="menu-toggle"
+        class="hamburger"
+        type="button"
+        aria-label="Abrir menu"
+        aria-expanded="false"
+        aria-controls="nav-menu"
+      >
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <div id="nav-overlay" class="nav-overlay"></div>
+  <nav id="nav-menu" class="nav-menu" aria-hidden="true">
+    <p class="nav-menu__title">Menu</p>
+    <a href="dados-pessoais.html" class="nav-menu__link">Dados Pessoais</a>
+    <a href="imc.html" class="nav-menu__link">IMC</a>
+    <a href="registro-alimentar.html" class="nav-menu__link nav-menu__link--active">Registro Alimentar</a>
+    <a href="exercicio-fisico.html" class="nav-menu__link">Exercício Físico</a>
+    <button id="menu-sair" class="nav-menu__link nav-menu__link--exit" type="button">Sair</button>
+  </nav>
+
+  <main class="container">
+    <section class="totals-grid">
+      <div class="total-card">
+        <p class="total-card__label">PT</p>
+        <p id="total-pt" class="total-card__value">0</p>
+      </div>
+      <div class="total-card">
+        <p class="total-card__label">CH</p>
+        <p id="total-ch" class="total-card__value">0</p>
+      </div>
+      <div class="total-card">
+        <p class="total-card__label">LP</p>
+        <p id="total-lp" class="total-card__value">0</p>
+      </div>
+      <div class="total-card">
+        <p class="total-card__label">Kcal</p>
+        <p id="total-kcal" class="total-card__value">0</p>
+      </div>
+    </section>
+
+    <form id="form-add-refeicao" class="card" novalidate>
+      <div class="field">
+        <label for="titulo-refeicao">Refeição</label>
+        <select id="titulo-refeicao" name="titulo-refeicao">
+          <option value="Café da Manhã">Café da Manhã</option>
+          <option value="Lanche">Lanche</option>
+          <option value="Almoço">Almoço</option>
+          <option value="Jantar">Jantar</option>
+          <option value="Ceia">Ceia</option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="btn btn-primary btn-block">Adicionar Refeição</button>
+        <button type="button" id="btn-cadastrar-alimento" class="btn btn-secondary btn-block">Cadastrar Alimento</button>
+      </div>
+    </form>
+
+    <div id="refeicoes-container"></div>
+    <p id="refeicoes-empty" class="section-empty">Nenhuma refeição registrada hoje. Adicione a primeira acima.</p>
+
+    <div class="actions">
+      <a href="dados-pessoais.html" class="btn btn-secondary btn-block">Voltar</a>
+    </div>
+  </main>
+
+  <datalist id="datalist-alimentos"></datalist>
+
+  <div id="modal-cadastro-alimento" class="modal-overlay hidden">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-cadastro-alimento-title">
+      <h2 id="modal-cadastro-alimento-title" class="modal__title">Cadastrar Alimento</h2>
+      <form id="form-cadastro-alimento" novalidate>
+        <div class="field">
+          <label for="cadastro-nome">Nome do alimento/prato</label>
+          <input type="text" id="cadastro-nome" name="cadastro-nome" required />
+        </div>
+
+        <div class="macro-grid">
+          <div class="field">
+            <label for="cadastro-pt">PT</label>
+            <input type="number" id="cadastro-pt" step="0.1" min="0" inputmode="decimal" />
+          </div>
+          <div class="field">
+            <label for="cadastro-ch">CH</label>
+            <input type="number" id="cadastro-ch" step="0.1" min="0" inputmode="decimal" />
+          </div>
+          <div class="field">
+            <label for="cadastro-lp">LP</label>
+            <input type="number" id="cadastro-lp" step="0.1" min="0" inputmode="decimal" />
+          </div>
+          <div class="field">
+            <label for="cadastro-kcal">Kcal</label>
+            <input type="number" id="cadastro-kcal" step="1" min="0" inputmode="decimal" />
+          </div>
+        </div>
+
+        <p id="cadastro-alimento-feedback" class="form-feedback"></p>
+
+        <div class="actions">
+          <button type="submit" class="btn btn-primary btn-block">Salvar</button>
+          <button type="button" id="btn-cancelar-cadastro" class="btn btn-secondary btn-block">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/menu.js"></script>
+  <script src="js/registro-alimentar.js"></script>
+</body>
+</html>
