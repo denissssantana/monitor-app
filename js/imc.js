@@ -26,9 +26,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let chart = null;
   let editandoId = null;
+  let historicoAtual = [];
 
   function hojeIso() {
-    return new Date().toISOString().slice(0, 10);
+    return getHojeIso();
+  }
+
+  function irParaRegistroAlimentarDoDia(dataIso) {
+    window.location.href = `registro-alimentar.html?data=${dataIso}`;
   }
 
   dataInput.value = hojeIso();
@@ -53,13 +58,9 @@ document.addEventListener("DOMContentLoaded", () => {
     return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
   }
 
-  function formatarDataBR(dataIso) {
-    const [ano, mes, dia] = dataIso.split("-");
-    return `${dia}/${mes}/${ano.slice(2)}`;
-  }
-
   function renderGrafico() {
     const historico = getHistoricoImcOrdenado();
+    historicoAtual = historico;
 
     if (historico.length === 0) {
       chartCanvas.classList.add("hidden");
@@ -104,6 +105,13 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         scales: {
           y: { beginAtZero: false },
+        },
+        onClick: (event, elements) => {
+          if (!elements.length) return;
+          irParaRegistroAlimentarDoDia(historicoAtual[elements[0].index].data);
+        },
+        onHover: (event, elements) => {
+          event.native.target.style.cursor = elements.length ? "pointer" : "default";
         },
       },
     });

@@ -1,18 +1,22 @@
 /* MONITOR — registro-alimentar.js
-   Monta o registro alimentar do dia por blocos de refeição, calcula
-   os totais de macros/kcal contra a meta diária, e mantém a base de
-   alimentos reutilizável (bloco compacto, recolhido) usada tanto
-   para o autocomplete quanto para o cálculo proporcional de macros
-   pela quantidade real consumida em cada refeição. */
+   Monta o registro alimentar de um dia (hoje por padrão, ou uma data
+   histórica via ?data=yyyy-mm-dd) por blocos de refeição, calcula os
+   totais de macros/kcal contra a meta diária, e usa a base de
+   alimentos (cadastrada em cadastro-alimentos.html) para autocomplete
+   e cálculo proporcional de macros pela quantidade real consumida. */
 
 document.addEventListener("DOMContentLoaded", () => {
   const totalKcalEl = document.getElementById("total-kcal");
   const totalPtEl = document.getElementById("total-pt");
   const totalChEl = document.getElementById("total-ch");
   const totalLpEl = document.getElementById("total-lp");
+  const kcalOverviewTitleEl = document.getElementById("kcal-overview-title");
   const metaKcalLabelEl = document.getElementById("meta-kcal-label");
   const metaKcalEmptyEl = document.getElementById("meta-kcal-empty");
   const kcalProgressFillEl = document.getElementById("kcal-progress-fill");
+
+  const historicoBannerEl = document.getElementById("historico-banner");
+  const historicoBannerTextoEl = document.getElementById("historico-banner-texto");
 
   const btnEditarMeta = document.getElementById("btn-editar-meta");
   const modalMetaKcal = document.getElementById("modal-meta-kcal");
@@ -26,23 +30,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const refeicoesContainer = document.getElementById("refeicoes-container");
   const refeicoesEmpty = document.getElementById("refeicoes-empty");
   const datalistAlimentos = document.getElementById("datalist-alimentos");
-
-  const formCadastro = document.getElementById("form-cadastro-alimento");
-  const cadastroFeedback = document.getElementById("cadastro-alimento-feedback");
-  const alimentosBaseListaEl = document.getElementById("alimentos-base-lista");
-  const alimentosBaseListaEmptyEl = document.getElementById("alimentos-base-lista-empty");
-
-  const modalEditarAlimento = document.getElementById("modal-editar-alimento");
-  const formEditarAlimento = document.getElementById("form-editar-alimento");
-  const editarAlimentoNomeInput = document.getElementById("editar-alimento-nome");
-  const editarAlimentoQuantidadeInput = document.getElementById("editar-alimento-quantidade");
-  const editarAlimentoUnidadeSelect = document.getElementById("editar-alimento-unidade");
-  const editarAlimentoPtInput = document.getElementById("editar-alimento-pt");
-  const editarAlimentoChInput = document.getElementById("editar-alimento-ch");
-  const editarAlimentoLpInput = document.getElementById("editar-alimento-lp");
-  const editarAlimentoKcalInput = document.getElementById("editar-alimento-kcal");
-  const editarAlimentoFeedback = document.getElementById("editar-alimento-feedback");
-  const btnCancelarEdicaoAlimento = document.getElementById("btn-cancelar-edicao-alimento");
 
   const modalEditarItem = document.getElementById("modal-editar-item-refeicao");
   const formEditarItem = document.getElementById("form-editar-item-refeicao");
@@ -58,16 +45,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const ICON_EDITAR = `<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>`;
   const ICON_EXCLUIR = `<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>`;
+  const ICON_INCLUIR_BASE = `<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18"></rect><path d="M12 8v8M8 12h8"></path></svg>`;
 
-  let editandoAlimentoId = null;
   let editandoItemRefeicaoId = null;
   let editandoItemId = null;
+  const refeicoesComFormAberto = new Set();
 
-  function hojeIso() {
-    return new Date().toISOString().slice(0, 10);
-  }
-
-  const dataAtual = hojeIso();
+  const dataHoje = getHojeIso();
+  const params = new URLSearchParams(window.location.search);
+  const dataParam = params.get("data");
+  const dataSelecionada = dataParam && /^\d{4}-\d{2}-\d{2}$/.test(dataParam) ? dataParam : dataHoje;
+  const modoHoje = dataSelecionada === dataHoje;
 
   function gerarId() {
     return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -84,8 +72,21 @@ document.addEventListener("DOMContentLoaded", () => {
     return div.innerHTML;
   }
 
+  function configurarModoExibicao() {
+    if (modoHoje) {
+      kcalOverviewTitleEl.textContent = "Kcal Hoje";
+      historicoBannerEl.classList.add("hidden");
+      refeicoesEmpty.textContent = "Nenhuma refeição registrada hoje. Adicione a primeira acima.";
+    } else {
+      kcalOverviewTitleEl.textContent = `Kcal em ${formatarDataBR(dataSelecionada)}`;
+      historicoBannerTextoEl.textContent = `Histórico — ${formatarDataBR(dataSelecionada)}`;
+      historicoBannerEl.classList.remove("hidden");
+      refeicoesEmpty.textContent = "Nenhum registro alimentar para esta data.";
+    }
+  }
+
   function renderKcalOverview() {
-    const totais = getTotaisAlimentaresDoDia(dataAtual);
+    const totais = getTotaisAlimentaresDoDia(dataSelecionada);
 
     totalKcalEl.textContent = Math.round(totais.kcal);
     totalPtEl.textContent = totais.pt.toFixed(1);
@@ -93,15 +94,24 @@ document.addEventListener("DOMContentLoaded", () => {
     totalLpEl.textContent = totais.lp.toFixed(1);
 
     const meta = getMetaKcalDia();
+    kcalProgressFillEl.classList.remove(
+      "progress-bar-horizontal__fill--verde",
+      "progress-bar-horizontal__fill--amarelo",
+      "progress-bar-horizontal__fill--vermelho"
+    );
+
     if (!meta) {
       metaKcalLabelEl.textContent = "--";
       kcalProgressFillEl.style.width = "0%";
       metaKcalEmptyEl.classList.remove("hidden");
     } else {
       metaKcalLabelEl.textContent = meta;
-      const percentual = Math.min(100, Math.round((totais.kcal / meta) * 100));
-      kcalProgressFillEl.style.width = `${percentual}%`;
+      const percentualReal = (totais.kcal / meta) * 100;
+      kcalProgressFillEl.style.width = `${Math.min(100, Math.round(percentualReal))}%`;
       metaKcalEmptyEl.classList.add("hidden");
+
+      const cor = getFaixaCorKcal(totais.kcal, meta);
+      if (cor) kcalProgressFillEl.classList.add(`progress-bar-horizontal__fill--${cor}`);
     }
   }
 
@@ -139,150 +149,11 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   function renderDatalist() {
-    const alimentos = getAlimentosBase();
+    const alimentos = getAlimentosBase()
+      .slice()
+      .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
     datalistAlimentos.innerHTML = alimentos.map((a) => `<option value="${escapeHtml(a.nome)}"></option>`).join("");
   }
-
-  function renderAlimentosBaseLista() {
-    const alimentos = getAlimentosBase();
-    alimentosBaseListaEl.innerHTML = "";
-
-    if (alimentos.length === 0) {
-      alimentosBaseListaEl.classList.add("hidden");
-      alimentosBaseListaEmptyEl.classList.remove("hidden");
-      return;
-    }
-
-    alimentosBaseListaEl.classList.remove("hidden");
-    alimentosBaseListaEmptyEl.classList.add("hidden");
-
-    alimentos.forEach((alimento) => {
-      const li = document.createElement("li");
-      li.className = "record-item";
-      li.dataset.id = alimento.id;
-      li.innerHTML = `
-        <div class="record-item__info">
-          <span class="food-item__nome">${escapeHtml(alimento.nome)} <small>${num(alimento.quantidadeReferencia)}${alimento.unidade}</small></span>
-          <span class="food-item__macros">Kcal ${num(alimento.kcal)} · PT ${num(alimento.pt)} · CH ${num(alimento.ch)} · LP ${num(alimento.lp)}</span>
-        </div>
-        <div class="record-item__actions">
-          <button type="button" class="icon-btn icon-btn--edit" data-action="editar" aria-label="Editar alimento">${ICON_EDITAR}</button>
-          <button type="button" class="icon-btn icon-btn--delete" data-action="excluir" aria-label="Excluir alimento">${ICON_EXCLUIR}</button>
-        </div>
-      `;
-      alimentosBaseListaEl.appendChild(li);
-    });
-  }
-
-  function abrirModalEdicaoAlimento(id) {
-    const alimento = getAlimentosBase().find((item) => item.id === id);
-    if (!alimento) return;
-    editandoAlimentoId = id;
-    editarAlimentoNomeInput.value = alimento.nome;
-    editarAlimentoQuantidadeInput.value = alimento.quantidadeReferencia;
-    editarAlimentoUnidadeSelect.value = alimento.unidade;
-    editarAlimentoKcalInput.value = alimento.kcal;
-    editarAlimentoPtInput.value = alimento.pt;
-    editarAlimentoChInput.value = alimento.ch;
-    editarAlimentoLpInput.value = alimento.lp;
-    editarAlimentoFeedback.textContent = "";
-    modalEditarAlimento.classList.remove("hidden");
-  }
-
-  function fecharModalEdicaoAlimento() {
-    modalEditarAlimento.classList.add("hidden");
-    editandoAlimentoId = null;
-  }
-
-  function excluirAlimento(id) {
-    if (!confirm("Excluir este alimento da base?")) return;
-    excluirAlimentoBase(id);
-    renderAlimentosBaseLista();
-    renderDatalist();
-  }
-
-  alimentosBaseListaEl.addEventListener("click", (event) => {
-    const btn = event.target.closest("button[data-action]");
-    if (!btn) return;
-    const id = btn.closest(".record-item").dataset.id;
-
-    if (btn.dataset.action === "editar") {
-      abrirModalEdicaoAlimento(id);
-    } else if (btn.dataset.action === "excluir") {
-      excluirAlimento(id);
-    }
-  });
-
-  btnCancelarEdicaoAlimento.addEventListener("click", fecharModalEdicaoAlimento);
-
-  modalEditarAlimento.addEventListener("click", (event) => {
-    if (event.target === modalEditarAlimento) fecharModalEdicaoAlimento();
-  });
-
-  formEditarAlimento.addEventListener("submit", (event) => {
-    event.preventDefault();
-    editarAlimentoFeedback.textContent = "";
-
-    const nome = editarAlimentoNomeInput.value.trim();
-    if (!nome) {
-      editarAlimentoFeedback.textContent = "Informe o nome do alimento.";
-      return;
-    }
-    const quantidadeReferencia = num(editarAlimentoQuantidadeInput.value);
-    if (!quantidadeReferencia || quantidadeReferencia <= 0) {
-      editarAlimentoFeedback.textContent = "Informe uma quantidade de referência válida.";
-      return;
-    }
-
-    editarAlimentoBase(editandoAlimentoId, {
-      nome,
-      quantidadeReferencia,
-      unidade: editarAlimentoUnidadeSelect.value,
-      kcal: num(editarAlimentoKcalInput.value),
-      pt: num(editarAlimentoPtInput.value),
-      ch: num(editarAlimentoChInput.value),
-      lp: num(editarAlimentoLpInput.value),
-    });
-
-    fecharModalEdicaoAlimento();
-    renderAlimentosBaseLista();
-    renderDatalist();
-  });
-
-  formCadastro.addEventListener("submit", (event) => {
-    event.preventDefault();
-    cadastroFeedback.classList.remove("success");
-    cadastroFeedback.textContent = "";
-
-    const nome = document.getElementById("cadastro-nome").value.trim();
-    if (!nome) {
-      cadastroFeedback.textContent = "Informe o nome do alimento.";
-      return;
-    }
-    const quantidadeReferencia = num(document.getElementById("cadastro-quantidade").value);
-    if (!quantidadeReferencia || quantidadeReferencia <= 0) {
-      cadastroFeedback.textContent = "Informe uma quantidade de referência válida.";
-      return;
-    }
-
-    salvarAlimentoBase({
-      id: gerarId(),
-      nome,
-      quantidadeReferencia,
-      unidade: document.getElementById("cadastro-unidade").value,
-      kcal: num(document.getElementById("cadastro-kcal").value),
-      pt: num(document.getElementById("cadastro-pt").value),
-      ch: num(document.getElementById("cadastro-ch").value),
-      lp: num(document.getElementById("cadastro-lp").value),
-    });
-
-    formCadastro.reset();
-    document.getElementById("cadastro-unidade").value = "g";
-    cadastroFeedback.textContent = "Alimento salvo na base.";
-    cadastroFeedback.classList.add("success");
-    renderAlimentosBaseLista();
-    renderDatalist();
-  });
 
   function aplicarProporcao(form, alimentoBase) {
     const quantidade = num(form.querySelector(".food-quantidade").value);
@@ -293,8 +164,33 @@ document.addEventListener("DOMContentLoaded", () => {
     form.querySelector(".food-lp").value = (alimentoBase.lp * fator).toFixed(1);
   }
 
+  function incluirItemNaBase(item) {
+    const jaExiste = getAlimentosBase().some(
+      (alimento) => alimento.nome.trim().toLowerCase() === item.nome.trim().toLowerCase()
+    );
+    if (jaExiste) {
+      alert("Este alimento já está na base.");
+      return;
+    }
+
+    salvarAlimentoBase({
+      id: gerarId(),
+      nome: item.nome,
+      tipo: "componente",
+      quantidadeReferencia: num(item.quantidade),
+      unidade: item.unidade,
+      kcal: num(item.kcal),
+      pt: num(item.pt),
+      ch: num(item.ch),
+      lp: num(item.lp),
+    });
+
+    renderDatalist();
+    alert("Alimento incluído na Base de Alimentos.");
+  }
+
   function renderRefeicoes() {
-    const refeicoes = getRegistroAlimentarDia(dataAtual);
+    const refeicoes = getRegistroAlimentarPorData(dataSelecionada);
     refeicoesContainer.innerHTML = "";
 
     if (refeicoes.length === 0) {
@@ -319,6 +215,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <span class="food-item__macros">Kcal ${num(item.kcal)} · PT ${num(item.pt)} · CH ${num(item.ch)} · LP ${num(item.lp)}</span>
           </div>
           <div class="food-item__actions">
+            <button type="button" class="icon-btn icon-btn--add" data-action="incluir-base" aria-label="Incluir na Base de Alimentos">${ICON_INCLUIR_BASE}</button>
             <button type="button" class="icon-btn icon-btn--edit" data-action="editar-item" aria-label="Editar alimento">${ICON_EDITAR}</button>
             <button type="button" class="icon-btn icon-btn--delete" data-action="remover-item" aria-label="Remover alimento">${ICON_EXCLUIR}</button>
           </div>
@@ -327,12 +224,10 @@ document.addEventListener("DOMContentLoaded", () => {
               .join("")}</ul>`
           : "";
 
-      bloco.innerHTML = `
-        <div class="meal-block__header">
-          <h3 class="meal-block__title">${escapeHtml(refeicao.titulo)}</h3>
-          <button type="button" class="icon-btn icon-btn--delete" data-action="remover-refeicao" aria-label="Remover refeição">${ICON_EXCLUIR}</button>
-        </div>
-        ${itensHtml}
+      const formAberto = refeicao.itens.length === 0 || refeicoesComFormAberto.has(refeicao.id);
+
+      const formHtml = formAberto
+        ? `
         <form class="food-form">
           <div class="field">
             <label>Alimento</label>
@@ -345,6 +240,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <select class="food-unidade">
                 <option value="g">g</option>
                 <option value="ml">ml</option>
+                <option value="uni">uni</option>
               </select>
             </div>
           </div>
@@ -354,8 +250,20 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="field"><label>CH</label><input type="number" class="food-ch" step="0.1" min="0" inputmode="decimal" /></div>
             <div class="field"><label>LP</label><input type="number" class="food-lp" step="0.1" min="0" inputmode="decimal" /></div>
           </div>
-          <button type="submit" class="btn btn-secondary btn-block">Adicionar</button>
-        </form>
+          <div class="actions">
+            <button type="submit" class="btn btn-secondary btn-block">Adicionar</button>
+            ${refeicao.itens.length > 0 ? `<button type="button" class="btn btn-secondary btn-block" data-action="fechar-form">Cancelar</button>` : ""}
+          </div>
+        </form>`
+        : `<button type="button" class="btn btn-secondary btn-block meal-block__add-btn" data-action="abrir-form">+ Adicionar alimento</button>`;
+
+      bloco.innerHTML = `
+        <div class="meal-block__header">
+          <h3 class="meal-block__title">${escapeHtml(refeicao.titulo)}</h3>
+          <button type="button" class="icon-btn icon-btn--delete" data-action="remover-refeicao" aria-label="Remover refeição">${ICON_EXCLUIR}</button>
+        </div>
+        ${itensHtml}
+        ${formHtml}
       `;
 
       refeicoesContainer.appendChild(bloco);
@@ -369,9 +277,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   formAddRefeicao.addEventListener("submit", (event) => {
     event.preventDefault();
-    const refeicoes = getRegistroAlimentarDia(dataAtual);
+    const refeicoes = getRegistroAlimentarPorData(dataSelecionada);
     refeicoes.push({ id: gerarId(), titulo: tituloSelect.value, itens: [] });
-    saveRegistroAlimentarDia(dataAtual, refeicoes);
+    saveRegistroAlimentarDia(dataSelecionada, refeicoes);
     renderTudo();
   });
 
@@ -384,15 +292,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (btn.dataset.action === "remover-refeicao") {
       if (!confirm("Remover esta refeição e todos os alimentos dela?")) return;
-      const refeicoes = getRegistroAlimentarDia(dataAtual).filter((r) => r.id !== refeicaoId);
-      saveRegistroAlimentarDia(dataAtual, refeicoes);
+      const refeicoes = getRegistroAlimentarPorData(dataSelecionada).filter((r) => r.id !== refeicaoId);
+      saveRegistroAlimentarDia(dataSelecionada, refeicoes);
+      refeicoesComFormAberto.delete(refeicaoId);
       renderTudo();
       return;
     }
 
     if (btn.dataset.action === "remover-item") {
       const itemId = btn.closest(".food-item").dataset.itemId;
-      excluirAlimentoDaRefeicao(dataAtual, refeicaoId, itemId);
+      excluirAlimentoDaRefeicao(dataSelecionada, refeicaoId, itemId);
       renderTudo();
       return;
     }
@@ -400,6 +309,26 @@ document.addEventListener("DOMContentLoaded", () => {
     if (btn.dataset.action === "editar-item") {
       const itemId = btn.closest(".food-item").dataset.itemId;
       abrirModalEdicaoItem(refeicaoId, itemId);
+      return;
+    }
+
+    if (btn.dataset.action === "incluir-base") {
+      const itemId = btn.closest(".food-item").dataset.itemId;
+      const refeicao = getRegistroAlimentarPorData(dataSelecionada).find((r) => r.id === refeicaoId);
+      const item = refeicao && refeicao.itens.find((i) => i.id === itemId);
+      if (item) incluirItemNaBase(item);
+      return;
+    }
+
+    if (btn.dataset.action === "abrir-form") {
+      refeicoesComFormAberto.add(refeicaoId);
+      renderTudo();
+      return;
+    }
+
+    if (btn.dataset.action === "fechar-form") {
+      refeicoesComFormAberto.delete(refeicaoId);
+      renderTudo();
     }
   });
 
@@ -445,7 +374,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const quantidade = num(form.querySelector(".food-quantidade").value);
     if (!quantidade || quantidade <= 0) return;
 
-    adicionarAlimentoNaRefeicao(dataAtual, refeicaoId, {
+    adicionarAlimentoNaRefeicao(dataSelecionada, refeicaoId, {
       id: gerarId(),
       nome,
       quantidade,
@@ -457,11 +386,12 @@ document.addEventListener("DOMContentLoaded", () => {
       alimentoBaseId: form.dataset.baseId || null,
     });
 
+    refeicoesComFormAberto.delete(refeicaoId);
     renderTudo();
   });
 
   function abrirModalEdicaoItem(refeicaoId, itemId) {
-    const refeicoes = getRegistroAlimentarDia(dataAtual);
+    const refeicoes = getRegistroAlimentarPorData(dataSelecionada);
     const refeicao = refeicoes.find((r) => r.id === refeicaoId);
     const item = refeicao && refeicao.itens.find((i) => i.id === itemId);
     if (!item) return;
@@ -506,7 +436,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    editarAlimentoDaRefeicao(dataAtual, editandoItemRefeicaoId, editandoItemId, {
+    editarAlimentoDaRefeicao(dataSelecionada, editandoItemRefeicaoId, editandoItemId, {
       nome,
       quantidade,
       unidade: editarItemUnidadeSelect.value,
@@ -520,11 +450,11 @@ document.addEventListener("DOMContentLoaded", () => {
     renderTudo();
   });
 
-  renderAlimentosBaseLista();
+  configurarModoExibicao();
   renderDatalist();
   renderTudo();
 
-  if (!getMetaKcalDia()) {
+  if (modoHoje && !getMetaKcalDia()) {
     abrirModalMeta();
   }
 });

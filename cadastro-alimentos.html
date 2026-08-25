@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MONITOR — Base de Alimentos</title>
+  <script>
+    (function () {
+      var theme = localStorage.getItem("monitor_theme") || "dark";
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="topbar__title">Base de Alimentos</h1>
+    <div class="topbar__actions">
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Alternar tema">
+        <svg class="icon-sun" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path>
+        </svg>
+      </button>
+      <button
+        id="menu-toggle"
+        class="hamburger"
+        type="button"
+        aria-label="Abrir menu"
+        aria-expanded="false"
+        aria-controls="nav-menu"
+      >
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <div id="nav-overlay" class="nav-overlay"></div>
+  <nav id="nav-menu" class="nav-menu" aria-hidden="true">
+    <p class="nav-menu__title">Menu</p>
+    <a href="dashboard.html" class="nav-menu__link">Dashboard</a>
+    <a href="dados-pessoais.html" class="nav-menu__link">Dados Pessoais</a>
+    <a href="imc.html" class="nav-menu__link">IMC</a>
+    <a href="registro-alimentar.html" class="nav-menu__link">Registro Alimentar</a>
+    <a href="cadastro-alimentos.html" class="nav-menu__link nav-menu__link--active">Base de Alimentos</a>
+    <a href="exercicio-fisico.html" class="nav-menu__link">Exercício Físico</a>
+    <button id="menu-sair" class="nav-menu__link nav-menu__link--exit" type="button">Sair</button>
+  </nav>
+
+  <main class="container">
+    <form id="form-cadastro-alimento" class="card" novalidate>
+      <div class="field">
+        <label for="cadastro-nome">Nome do alimento/prato</label>
+        <input type="text" id="cadastro-nome" name="cadastro-nome" required />
+      </div>
+
+      <div class="field">
+        <label for="cadastro-tipo">Tipo</label>
+        <select id="cadastro-tipo">
+          <option value="componente">Alimento (componente)</option>
+          <option value="refeicao_completa">Refeição completa</option>
+        </select>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="cadastro-quantidade">Quantidade de referência</label>
+          <input type="number" id="cadastro-quantidade" step="0.1" min="0" inputmode="decimal" required />
+        </div>
+        <div class="field">
+          <label for="cadastro-unidade">Unidade</label>
+          <select id="cadastro-unidade">
+            <option value="g">g</option>
+            <option value="ml">ml</option>
+            <option value="uni">uni</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="macro-grid">
+        <div class="field">
+          <label for="cadastro-kcal">Kcal</label>
+          <input type="number" id="cadastro-kcal" step="1" min="0" inputmode="decimal" />
+        </div>
+        <div class="field">
+          <label for="cadastro-pt">PT</label>
+          <input type="number" id="cadastro-pt" step="0.1" min="0" inputmode="decimal" />
+        </div>
+        <div class="field">
+          <label for="cadastro-ch">CH</label>
+          <input type="number" id="cadastro-ch" step="0.1" min="0" inputmode="decimal" />
+        </div>
+        <div class="field">
+          <label for="cadastro-lp">LP</label>
+          <input type="number" id="cadastro-lp" step="0.1" min="0" inputmode="decimal" />
+        </div>
+      </div>
+
+      <p id="cadastro-alimento-feedback" class="form-feedback"></p>
+
+      <div class="actions">
+        <button type="submit" class="btn btn-primary btn-block">Salvar Alimento</button>
+      </div>
+    </form>
+
+    <section class="list-card">
+      <p class="list-card__title">Alimentos Cadastrados</p>
+      <ul id="alimentos-base-lista" class="record-list"></ul>
+      <p id="alimentos-base-lista-empty" class="section-empty hidden">Nenhum alimento cadastrado ainda.</p>
+    </section>
+
+    <div class="actions">
+      <a href="registro-alimentar.html" class="btn btn-secondary btn-block">Voltar ao Registro Alimentar</a>
+    </div>
+  </main>
+
+  <div id="modal-editar-alimento" class="modal-overlay hidden">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-editar-alimento-title">
+      <h2 id="modal-editar-alimento-title" class="modal__title">Editar Alimento</h2>
+      <form id="form-editar-alimento" novalidate>
+        <div class="field">
+          <label for="editar-alimento-nome">Nome do alimento/prato</label>
+          <input type="text" id="editar-alimento-nome" required />
+        </div>
+
+        <div class="field">
+          <label for="editar-alimento-tipo">Tipo</label>
+          <select id="editar-alimento-tipo">
+            <option value="componente">Alimento (componente)</option>
+            <option value="refeicao_completa">Refeição completa</option>
+          </select>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="editar-alimento-quantidade">Quantidade de referência</label>
+            <input type="number" id="editar-alimento-quantidade" step="0.1" min="0" inputmode="decimal" required />
+          </div>
+          <div class="field">
+            <label for="editar-alimento-unidade">Unidade</label>
+            <select id="editar-alimento-unidade">
+              <option value="g">g</option>
+              <option value="ml">ml</option>
+              <option value="uni">uni</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="macro-grid">
+          <div class="field">
+            <label for="editar-alimento-kcal">Kcal</label>
+            <input type="number" id="editar-alimento-kcal" step="1" min="0" inputmode="decimal" />
+          </div>
+          <div class="field">
+            <label for="editar-alimento-pt">PT</label>
+            <input type="number" id="editar-alimento-pt" step="0.1" min="0" inputmode="decimal" />
+          </div>
+          <div class="field">
+            <label for="editar-alimento-ch">CH</label>
+            <input type="number" id="editar-alimento-ch" step="0.1" min="0" inputmode="decimal" />
+          </div>
+          <div class="field">
+            <label for="editar-alimento-lp">LP</label>
+            <input type="number" id="editar-alimento-lp" step="0.1" min="0" inputmode="decimal" />
+          </div>
+        </div>
+
+        <p id="editar-alimento-feedback" class="form-feedback"></p>
+
+        <div class="actions">
+          <button type="submit" class="btn btn-primary btn-block">Salvar</button>
+          <button type="button" id="btn-cancelar-edicao-alimento" class="btn btn-secondary btn-block">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/menu.js"></script>
+  <script src="js/cadastro-alimentos.js"></script>
+</body>
+</html>

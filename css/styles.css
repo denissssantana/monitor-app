@@ -48,6 +48,10 @@ button {
   --accent-success: #6fae4a;
   --accent-warning: #e0a624;
 
+  --faixa-verde: #4a9c3f;
+  --faixa-amarelo: #d1a521;
+  --faixa-vermelho: #cf3a2a;
+
   --on-accent: #101008;
 
   --font-display: "Oswald", "Arial Narrow", sans-serif;
@@ -493,6 +497,23 @@ a {
   margin-bottom: 0.75rem;
 }
 
+.chart-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.chart-card__header .chart-card__title {
+  margin-bottom: 0;
+}
+
+.chart-card__nav {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
 .chart-empty {
   color: var(--text-muted);
   font-size: 0.85rem;
@@ -641,10 +662,21 @@ a {
   border-color: var(--accent-olive-strong);
 }
 
+.icon-btn--add:hover,
+.icon-btn--add:focus-visible {
+  border-color: var(--faixa-verde);
+  color: var(--faixa-verde);
+}
+
 .icon-btn--delete:hover,
 .icon-btn--delete:focus-visible {
   border-color: var(--accent-action);
   color: var(--accent-action);
+}
+
+.icon-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 /* ---------- Totais do dia (Registro Alimentar) ---------- */
@@ -726,7 +758,41 @@ a {
   height: 100%;
   width: 0%;
   background: var(--accent-action);
-  transition: width 0.3s ease;
+  transition: width 0.3s ease, background-color 0.2s ease;
+}
+
+.progress-bar-horizontal__fill--verde {
+  background: var(--faixa-verde);
+}
+
+.progress-bar-horizontal__fill--amarelo {
+  background: var(--faixa-amarelo);
+}
+
+.progress-bar-horizontal__fill--vermelho {
+  background: var(--faixa-vermelho);
+}
+
+/* ---------- Banner de histórico (Registro Alimentar) ---------- */
+.historico-banner {
+  margin-top: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: color-mix(in srgb, var(--accent-olive) 25%, var(--bg-elevated));
+  border: 2px solid var(--accent-olive);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.historico-banner__link {
+  flex-shrink: 0;
+  color: var(--accent-action);
+  text-decoration: underline;
+  font-family: var(--font-display);
 }
 
 .macro-squares {
@@ -811,6 +877,10 @@ a {
 .food-form {
   border-top: 2px solid var(--border);
   padding-top: 0.9rem;
+}
+
+.meal-block__add-btn {
+  margin-top: 0.25rem;
 }
 
 .macro-grid {

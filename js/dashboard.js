@@ -22,12 +22,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const chartExercicioEmpty = document.getElementById("exercicio-dash-empty");
 
   function hojeIso() {
-    return new Date().toISOString().slice(0, 10);
+    return getHojeIso();
   }
 
-  function formatarDataBR(dataIso) {
-    const [ano, mes, dia] = dataIso.split("-");
-    return `${dia}/${mes}/${ano.slice(2)}`;
+  function irParaRegistroAlimentarDoDia(dataIso) {
+    window.location.href = `registro-alimentar.html?data=${dataIso}`;
   }
 
   function getComputedColor(varName) {
@@ -75,6 +74,13 @@ document.addEventListener("DOMContentLoaded", () => {
         scales: {
           y: { beginAtZero: false },
         },
+        onClick: (event, elements) => {
+          if (!elements.length) return;
+          irParaRegistroAlimentarDoDia(historico[elements[0].index].data);
+        },
+        onHover: (event, elements) => {
+          event.native.target.style.cursor = elements.length ? "pointer" : "default";
+        },
       },
     });
   }
@@ -88,10 +94,19 @@ document.addEventListener("DOMContentLoaded", () => {
     totalChEl.textContent = totais.ch.toFixed(1);
     totalLpEl.textContent = totais.lp.toFixed(1);
 
+    kcalFillEl.classList.remove(
+      "progress-bar-horizontal__fill--verde",
+      "progress-bar-horizontal__fill--amarelo",
+      "progress-bar-horizontal__fill--vermelho"
+    );
+
     if (meta) {
       kcalMetaEl.textContent = meta;
       const percentual = Math.min(100, Math.round((totais.kcal / meta) * 100));
       kcalFillEl.style.width = `${percentual}%`;
+
+      const cor = getFaixaCorKcal(totais.kcal, meta);
+      if (cor) kcalFillEl.classList.add(`progress-bar-horizontal__fill--${cor}`);
     } else {
       kcalMetaEl.textContent = "--";
       kcalFillEl.style.width = "0%";
@@ -114,7 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const labels = periodos.map((periodo) => formatarDataBR(periodo.dataInicio));
     const valores = periodos.map((periodo) => periodo.percentual);
-    const corAction = getComputedColor("--accent-action");
+    const cores = periodos.map((periodo) => getComputedColor(`--faixa-${periodo.cor}`));
 
     new Chart(chartExercicioCanvas.getContext("2d"), {
       type: "bar",
@@ -124,7 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
           {
             label: "% Concluído",
             data: valores,
-            backgroundColor: corAction,
+            backgroundColor: cores,
           },
         ],
       },
@@ -135,6 +150,13 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         scales: {
           y: { beginAtZero: true, max: 100 },
+        },
+        onClick: (event, elements) => {
+          if (!elements.length) return;
+          irParaRegistroAlimentarDoDia(periodos[elements[0].index].dataInicio);
+        },
+        onHover: (event, elements) => {
+          event.native.target.style.cursor = elements.length ? "pointer" : "default";
         },
       },
     });

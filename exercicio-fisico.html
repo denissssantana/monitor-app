@@ -51,6 +51,7 @@
     <a href="dados-pessoais.html" class="nav-menu__link">Dados Pessoais</a>
     <a href="imc.html" class="nav-menu__link">IMC</a>
     <a href="registro-alimentar.html" class="nav-menu__link">Registro Alimentar</a>
+    <a href="cadastro-alimentos.html" class="nav-menu__link">Base de Alimentos</a>
     <a href="exercicio-fisico.html" class="nav-menu__link nav-menu__link--active">Exercício Físico</a>
     <button id="menu-sair" class="nav-menu__link nav-menu__link--exit" type="button">Sair</button>
   </nav>
@@ -128,6 +129,22 @@
       <p class="chart-card__title">Evolução por Período</p>
       <canvas id="grafico-exercicio" height="220"></canvas>
       <p id="chart-exercicio-empty" class="chart-empty hidden">Nenhum período cadastrado ainda.</p>
+    </section>
+
+    <section class="chart-card">
+      <div class="chart-card__header">
+        <p class="chart-card__title">Evolução por Dia</p>
+        <div class="chart-card__nav">
+          <button type="button" id="btn-semaforo-anterior" class="icon-btn" aria-label="Dias anteriores">
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+          </button>
+          <button type="button" id="btn-semaforo-proximo" class="icon-btn" aria-label="Próximos dias">
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+          </button>
+        </div>
+      </div>
+      <canvas id="grafico-exercicio-semaforo" height="220"></canvas>
+      <p id="chart-exercicio-semaforo-empty" class="chart-empty hidden">Nenhum treino programado ainda.</p>
     </section>
 
     <div class="actions">

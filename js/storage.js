@@ -40,7 +40,7 @@
              id: string,
              nome: string,
              quantidade: number,        // quantidade real consumida
-             unidade: "g" | "ml",
+             unidade: "g" | "ml" | "uni",
              pt: number, ch: number, lp: number, kcal: number,
              // valores ABSOLUTOS já referentes à quantidade consumida
              // (se veio da base, já escalados a partir da referência;
@@ -58,9 +58,13 @@
        id: string,
        nome: string,
        quantidadeReferencia: number,  // ex.: 100
-       unidade: "g" | "ml",
-       pt: number, ch: number, lp: number, kcal: number
+       unidade: "g" | "ml" | "uni",
+       pt: number, ch: number, lp: number, kcal: number,
        // valores nutricionais correspondentes à quantidadeReferencia
+       tipo: "componente" | "refeicao_completa"
+       // "componente": alimento simples (ex.: arroz, ovo)
+       // "refeicao_completa": prato pronto/marmita — mesmo cálculo,
+       // campo é só classificação (prepara migração ao backend)
      }
    ]
 
@@ -83,7 +87,10 @@
            nome: string,
            quantidadeTreinos: number,   // quantidade original cadastrada
            treinos: [
-             { id: string, concluido: boolean }   // um item por treino gerado
+             { id: string, concluido: boolean, data: string }
+             // um item por treino gerado; "data" (ISO) é atribuída
+             // automaticamente distribuindo os treinos pelos dias do
+             // período — usada para o gráfico "semáforo" por dia
            ]
          }
        ]
@@ -117,6 +124,28 @@ const STORAGE_KEYS = {
   ALTURA_ATUAL: "monitor_altura_atual",
   META_KCAL_DIA: "monitor_meta_kcal_dia",
 };
+
+function getHojeIso() {
+  return formatarDataIso(new Date());
+}
+
+function formatarDataIso(date) {
+  const ano = date.getFullYear();
+  const mes = String(date.getMonth() + 1).padStart(2, "0");
+  const dia = String(date.getDate()).padStart(2, "0");
+  return `${ano}-${mes}-${dia}`;
+}
+
+function formatarDataBR(dataIso) {
+  const [ano, mes, dia] = dataIso.split("-");
+  return `${dia}/${mes}/${ano.slice(2)}`;
+}
+
+function addDiasIso(dataIso, dias) {
+  const data = new Date(dataIso + "T00:00:00");
+  data.setDate(data.getDate() + dias);
+  return formatarDataIso(data);
+}
 
 function getDadosPessoais() {
   const raw = localStorage.getItem(STORAGE_KEYS.DADOS_PESSOAIS);
@@ -213,6 +242,10 @@ function saveRegistroAlimentarDia(dataIso, refeicoes) {
   localStorage.setItem(STORAGE_KEYS.REGISTRO_ALIMENTAR, JSON.stringify(registroCompleto));
 }
 
+function getRegistroAlimentarPorData(dataIso) {
+  return getRegistroAlimentarDia(dataIso);
+}
+
 function adicionarAlimentoNaRefeicao(dataIso, refeicaoId, item) {
   const refeicoes = getRegistroAlimentarDia(dataIso);
   const refeicao = refeicoes.find((r) => r.id === refeicaoId);
@@ -268,6 +301,14 @@ function setMetaKcalDia(valor) {
   localStorage.setItem(STORAGE_KEYS.META_KCAL_DIA, String(valor));
 }
 
+function getFaixaCorKcal(kcalConsumida, metaKcalDia) {
+  if (!metaKcalDia) return null;
+  const percentual = (kcalConsumida / metaKcalDia) * 100;
+  if (percentual <= 100) return "verde";
+  if (percentual <= 120) return "amarelo";
+  return "vermelho";
+}
+
 function getAlimentosBase() {
   const raw = localStorage.getItem(STORAGE_KEYS.ALIMENTOS_BASE);
   return raw ? JSON.parse(raw) : [];
@@ -310,13 +351,81 @@ function saveConfigExercicio(config) {
   localStorage.setItem(STORAGE_KEYS.CONFIG_EXERCICIO, JSON.stringify(config));
 }
 
+function distribuirDatasTreinos(dataInicio, dataFim, quantidade) {
+  const inicio = new Date(dataInicio + "T00:00:00");
+  const fim = new Date(dataFim + "T00:00:00");
+  const totalDias = Math.max(1, Math.round((fim - inicio) / 86400000) + 1);
+  const datas = [];
+  for (let i = 0; i < quantidade; i++) {
+    const offset = Math.floor((i * totalDias) / quantidade);
+    const data = new Date(inicio);
+    data.setDate(data.getDate() + offset);
+    datas.push(formatarDataIso(data));
+  }
+  return datas;
+}
+
 function getPeriodosExercicio() {
   const raw = localStorage.getItem(STORAGE_KEYS.PERIODOS_EXERCICIO);
-  return raw ? JSON.parse(raw) : [];
+  const periodos = raw ? JSON.parse(raw) : [];
+
+  let precisaMigrar = false;
+  periodos.forEach((periodo) => {
+    periodo.atividades.forEach((atividade) => {
+      const semData = atividade.treinos.some((treino) => !treino.data);
+      if (semData) {
+        const datas = distribuirDatasTreinos(periodo.dataInicio, periodo.dataFim, atividade.treinos.length);
+        atividade.treinos.forEach((treino, index) => {
+          if (!treino.data) treino.data = datas[index];
+        });
+        precisaMigrar = true;
+      }
+    });
+  });
+  if (precisaMigrar) {
+    localStorage.setItem(STORAGE_KEYS.PERIODOS_EXERCICIO, JSON.stringify(periodos));
+  }
+
+  return periodos;
+}
+
+function getFaixaCorDiaExercicio(percentual) {
+  if (percentual >= 100) return "verde";
+  if (percentual > 0) return "amarelo";
+  return "vermelho";
+}
+
+function getTreinosPorDiaOrdenado() {
+  const periodos = getPeriodosExercicio();
+  const porDia = {};
+
+  periodos.forEach((periodo) => {
+    periodo.atividades.forEach((atividade) => {
+      atividade.treinos.forEach((treino) => {
+        if (!treino.data) return;
+        if (!porDia[treino.data]) porDia[treino.data] = { data: treino.data, total: 0, concluidos: 0 };
+        porDia[treino.data].total += 1;
+        if (treino.concluido) porDia[treino.data].concluidos += 1;
+      });
+    });
+  });
+
+  return Object.values(porDia)
+    .sort((a, b) => a.data.localeCompare(b.data))
+    .map((dia) => {
+      const percentual = dia.total === 0 ? 0 : Math.round((dia.concluidos / dia.total) * 1000) / 10;
+      return { ...dia, percentual, cor: getFaixaCorDiaExercicio(percentual) };
+    });
 }
 
 function savePeriodosExercicio(periodos) {
   localStorage.setItem(STORAGE_KEYS.PERIODOS_EXERCICIO, JSON.stringify(periodos));
+}
+
+function getFaixaCorPeriodo(percentual) {
+  if (percentual >= 80) return "verde";
+  if (percentual >= 50) return "amarelo";
+  return "vermelho";
 }
 
 function getPeriodosParaGrafico() {
@@ -331,7 +440,13 @@ function getPeriodosParaGrafico() {
         concluidos += atividade.treinos.filter((treino) => treino.concluido).length;
       });
       const percentual = total === 0 ? 0 : Math.round((concluidos / total) * 1000) / 10;
-      return { id: periodo.id, dataInicio: periodo.dataInicio, dataFim: periodo.dataFim, percentual };
+      return {
+        id: periodo.id,
+        dataInicio: periodo.dataInicio,
+        dataFim: periodo.dataFim,
+        percentual,
+        cor: getFaixaCorPeriodo(percentual),
+      };
     });
 }
 

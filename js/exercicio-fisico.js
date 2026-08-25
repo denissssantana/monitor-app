@@ -28,29 +28,37 @@ document.addEventListener("DOMContentLoaded", () => {
   const chartCanvas = document.getElementById("grafico-exercicio");
   const chartEmpty = document.getElementById("chart-exercicio-empty");
 
+  const chartSemaforoCanvas = document.getElementById("grafico-exercicio-semaforo");
+  const chartSemaforoEmpty = document.getElementById("chart-exercicio-semaforo-empty");
+  const btnSemaforoAnterior = document.getElementById("btn-semaforo-anterior");
+  const btnSemaforoProximo = document.getElementById("btn-semaforo-proximo");
+
   const ICON_EXCLUIR = `<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>`;
 
+  const JANELA_SEMAFORO = 5;
+
   let chart = null;
+  let chartSemaforo = null;
   let periodos = [];
   let periodoExibidoId = null;
+  let semaforoWindowStart = 0;
+  let semaforoInicializado = false;
+  let diasSemaforoVisiveis = [];
 
   function hojeIso() {
-    return new Date().toISOString().slice(0, 10);
+    return getHojeIso();
   }
 
   function addDias(dataIso, dias) {
-    const data = new Date(dataIso + "T00:00:00");
-    data.setDate(data.getDate() + dias);
-    return data.toISOString().slice(0, 10);
+    return addDiasIso(dataIso, dias);
   }
 
   function gerarId() {
     return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   }
 
-  function formatarDataBR(dataIso) {
-    const [ano, mes, dia] = dataIso.split("-");
-    return `${dia}/${mes}/${ano.slice(2)}`;
+  function irParaRegistroAlimentarDoDia(dataIso) {
+    window.location.href = `registro-alimentar.html?data=${dataIso}`;
   }
 
   function diasDoPeriodo(tipoPeriodo) {
@@ -274,7 +282,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const labels = ordenados.map((periodo) => formatarDataBR(periodo.dataInicio));
     const valores = ordenados.map((periodo) => percentualDoPeriodo(periodo));
-    const corAction = getComputedColor("--accent-action");
+    const cores = valores.map((percentual) => corFaixaVar(getFaixaCorPeriodo(percentual)));
 
     if (chart) chart.destroy();
 
@@ -286,7 +294,7 @@ document.addEventListener("DOMContentLoaded", () => {
           {
             label: "% Concluído",
             data: valores,
-            backgroundColor: corAction,
+            backgroundColor: cores,
           },
         ],
       },
@@ -298,13 +306,105 @@ document.addEventListener("DOMContentLoaded", () => {
         scales: {
           y: { beginAtZero: true, max: 100 },
         },
+        onClick: (event, elements) => {
+          if (!elements.length) return;
+          irParaRegistroAlimentarDoDia(ordenados[elements[0].index].dataInicio);
+        },
+        onHover: (event, elements) => {
+          event.native.target.style.cursor = elements.length ? "pointer" : "default";
+        },
       },
     });
+  }
+
+  function corFaixaVar(cor) {
+    return getComputedColor(`--faixa-${cor}`);
+  }
+
+  function clampSemaforoWindowStart(total) {
+    const maxStart = Math.max(0, total - JANELA_SEMAFORO);
+    semaforoWindowStart = Math.min(Math.max(0, semaforoWindowStart), maxStart);
+  }
+
+  function renderGraficoSemaforo() {
+    const dias = getTreinosPorDiaOrdenado();
+
+    if (dias.length === 0) {
+      chartSemaforoCanvas.classList.add("hidden");
+      chartSemaforoEmpty.classList.remove("hidden");
+      btnSemaforoAnterior.disabled = true;
+      btnSemaforoProximo.disabled = true;
+      if (chartSemaforo) {
+        chartSemaforo.destroy();
+        chartSemaforo = null;
+      }
+      return;
+    }
+
+    if (!semaforoInicializado) {
+      semaforoWindowStart = Math.max(0, dias.length - JANELA_SEMAFORO);
+      semaforoInicializado = true;
+    }
+    clampSemaforoWindowStart(dias.length);
+
+    chartSemaforoCanvas.classList.remove("hidden");
+    chartSemaforoEmpty.classList.add("hidden");
+
+    diasSemaforoVisiveis = dias.slice(semaforoWindowStart, semaforoWindowStart + JANELA_SEMAFORO);
+    const labels = diasSemaforoVisiveis.map((dia) => formatarDataBR(dia.data));
+    const valores = diasSemaforoVisiveis.map((dia) => dia.percentual);
+    const cores = diasSemaforoVisiveis.map((dia) => corFaixaVar(dia.cor));
+
+    btnSemaforoAnterior.disabled = semaforoWindowStart <= 0;
+    btnSemaforoProximo.disabled = semaforoWindowStart + JANELA_SEMAFORO >= dias.length;
+
+    if (chartSemaforo) chartSemaforo.destroy();
+
+    chartSemaforo = new Chart(chartSemaforoCanvas.getContext("2d"), {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "% Concluído",
+            data: valores,
+            backgroundColor: cores,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+        },
+        scales: {
+          y: { beginAtZero: true, max: 100 },
+        },
+        onClick: (event, elements) => {
+          if (!elements.length) return;
+          irParaRegistroAlimentarDoDia(diasSemaforoVisiveis[elements[0].index].data);
+        },
+        onHover: (event, elements) => {
+          event.native.target.style.cursor = elements.length ? "pointer" : "default";
+        },
+      },
+    });
+  }
+
+  function irParaSemaforoAnterior() {
+    semaforoWindowStart -= JANELA_SEMAFORO;
+    renderGraficoSemaforo();
+  }
+
+  function irParaSemaforoProximo() {
+    semaforoWindowStart += JANELA_SEMAFORO;
+    renderGraficoSemaforo();
   }
 
   function renderTudo() {
     renderCarousel();
     renderGraficoHistorico();
+    renderGraficoSemaforo();
   }
 
   tipoPeriodoSelect.addEventListener("change", () => {
@@ -335,8 +435,10 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const treinos = Array.from({ length: quantidade }, () => ({ id: gerarId(), concluido: false }));
-    periodoExibido().atividades.push({ id: gerarId(), nome, quantidadeTreinos: quantidade, treinos });
+    const periodo = periodoExibido();
+    const datas = distribuirDatasTreinos(periodo.dataInicio, periodo.dataFim, quantidade);
+    const treinos = datas.map((data) => ({ id: gerarId(), concluido: false, data }));
+    periodo.atividades.push({ id: gerarId(), nome, quantidadeTreinos: quantidade, treinos });
     persistirPeriodos();
 
     formAddAtividade.reset();
@@ -374,6 +476,8 @@ document.addEventListener("DOMContentLoaded", () => {
   btnPeriodoAnterior.addEventListener("click", irParaAnterior);
   btnPeriodoProximo.addEventListener("click", irParaProximo);
   btnExcluirPeriodo.addEventListener("click", excluirPeriodoExibido);
+  btnSemaforoAnterior.addEventListener("click", irParaSemaforoAnterior);
+  btnSemaforoProximo.addEventListener("click", irParaSemaforoProximo);
 
   let swipeStartX = null;
   let swipeStartY = null;
