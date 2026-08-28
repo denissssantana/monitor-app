@@ -520,6 +520,10 @@ a {
   margin-bottom: 0;
 }
 
+.chart-card__header .dashboard-box__title {
+  margin-bottom: 0;
+}
+
 .chart-card__nav {
   display: flex;
   gap: 0.4rem;

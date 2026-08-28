@@ -39,10 +39,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const chartExercicioCanvas = document.getElementById("grafico-exercicio-dash");
   const chartExercicioEmpty = document.getElementById("exercicio-dash-empty");
+  const dashboardBoxExercicio = document.getElementById("dashboard-box-exercicio");
+  const dashPeriodoAnterior = document.getElementById("dash-periodo-anterior");
+  const dashPeriodoProximo = document.getElementById("dash-periodo-proximo");
 
   let dataAlimentacaoAtual = hojeIso();
   let chartKcalDiaDash = null;
+  let chartExercicioDash = null;
   const janelaKcalDiaDash = criarJanelaCarrossel(5);
+  const janelaPeriodoDash = criarJanelaCarrossel(5);
 
   function hojeIso() {
     return getHojeIso();
@@ -252,17 +257,32 @@ document.addEventListener("DOMContentLoaded", () => {
     if (periodos.length === 0) {
       chartExercicioCanvas.classList.add("hidden");
       chartExercicioEmpty.classList.remove("hidden");
+      dashPeriodoAnterior.disabled = true;
+      dashPeriodoProximo.disabled = true;
+      janelaPeriodoDash.resetar();
+      if (chartExercicioDash) {
+        chartExercicioDash.destroy();
+        chartExercicioDash = null;
+      }
       return;
     }
+
+    const inicio = janelaPeriodoDash.preparar(periodos.length);
 
     chartExercicioCanvas.classList.remove("hidden");
     chartExercicioEmpty.classList.add("hidden");
 
-    const labels = periodos.map((periodo) => formatarDataBR(periodo.dataInicio));
-    const valores = periodos.map((periodo) => periodo.percentual);
-    const cores = periodos.map((periodo) => getComputedColor(`--faixa-${periodo.cor}`));
+    const periodosVisiveis = periodos.slice(inicio, inicio + janelaPeriodoDash.tamanho);
+    const labels = periodosVisiveis.map((periodo) => formatarDataBR(periodo.dataInicio));
+    const valores = periodosVisiveis.map((periodo) => periodo.percentual);
+    const cores = periodosVisiveis.map((periodo) => getComputedColor(`--faixa-${periodo.cor}`));
 
-    new Chart(chartExercicioCanvas.getContext("2d"), {
+    dashPeriodoAnterior.disabled = !janelaPeriodoDash.podeVoltar();
+    dashPeriodoProximo.disabled = !janelaPeriodoDash.podeAvancar(periodos.length);
+
+    if (chartExercicioDash) chartExercicioDash.destroy();
+
+    chartExercicioDash = new Chart(chartExercicioCanvas.getContext("2d"), {
       type: "bar",
       data: {
         labels,
@@ -284,13 +304,23 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         onClick: (event, elements) => {
           if (!elements.length) return;
-          irParaRegistroAlimentarDoDia(periodos[elements[0].index].dataInicio);
+          irParaRegistroAlimentarDoDia(periodosVisiveis[elements[0].index].dataInicio);
         },
         onHover: (event, elements) => {
           event.native.target.style.cursor = elements.length ? "pointer" : "default";
         },
       },
     });
+  }
+
+  function irParaPeriodoAnteriorDash() {
+    janelaPeriodoDash.voltar();
+    renderGraficoExercicio();
+  }
+
+  function irParaPeriodoProximoDash() {
+    janelaPeriodoDash.avancar();
+    renderGraficoExercicio();
   }
 
   function renderUsuario() {
@@ -323,6 +353,10 @@ document.addEventListener("DOMContentLoaded", () => {
   btnKcalDiaAnterior.addEventListener("click", irParaKcalDiaAnteriorDash);
   btnKcalDiaProximo.addEventListener("click", irParaKcalDiaProximoDash);
   anexarSwipeCarrossel(chartCardKcalDia, { aoVoltar: irParaKcalDiaAnteriorDash, aoAvancar: irParaKcalDiaProximoDash });
+
+  dashPeriodoAnterior.addEventListener("click", irParaPeriodoAnteriorDash);
+  dashPeriodoProximo.addEventListener("click", irParaPeriodoProximoDash);
+  anexarSwipeCarrossel(dashboardBoxExercicio, { aoVoltar: irParaPeriodoAnteriorDash, aoAvancar: irParaPeriodoProximoDash });
 
   renderUsuario();
   renderGraficoImc();

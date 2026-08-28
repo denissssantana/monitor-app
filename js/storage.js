@@ -459,9 +459,11 @@ function getPeriodosExercicio() {
 }
 
 function getFaixaCorDiaExercicio(percentual) {
-  if (percentual >= 100) return "verde";
-  if (percentual > 0) return "amarelo";
-  return "vermelho";
+  // 0% (nenhuma atividade concluída no dia) não tem faixa própria definida no
+  // produto — por padrão cai no mesmo amarelo de 0%-50%. Ajustar aqui para
+  // "vermelho" se for necessário destacar dias totalmente zerados.
+  if (percentual <= 50) return "amarelo";
+  return "verde";
 }
 
 function getTreinosPorDiaOrdenado() {

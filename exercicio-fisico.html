@@ -125,8 +125,18 @@
       </div>
     </section>
 
-    <section class="chart-card">
-      <p class="chart-card__title">Evolução por Período</p>
+    <section id="chart-card-periodo" class="chart-card">
+      <div class="chart-card__header">
+        <p class="chart-card__title">Evolução por Período</p>
+        <div class="chart-card__nav">
+          <button type="button" id="btn-periodo-hist-anterior" class="icon-btn" aria-label="Períodos anteriores">
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+          </button>
+          <button type="button" id="btn-periodo-hist-proximo" class="icon-btn" aria-label="Próximos períodos">
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+          </button>
+        </div>
+      </div>
       <canvas id="grafico-exercicio" height="220"></canvas>
       <p id="chart-exercicio-empty" class="chart-empty hidden">Nenhum período cadastrado ainda.</p>
     </section>

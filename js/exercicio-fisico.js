@@ -27,6 +27,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const chartCanvas = document.getElementById("grafico-exercicio");
   const chartEmpty = document.getElementById("chart-exercicio-empty");
+  const chartCardPeriodo = document.getElementById("chart-card-periodo");
+  const btnPeriodoHistAnterior = document.getElementById("btn-periodo-hist-anterior");
+  const btnPeriodoHistProximo = document.getElementById("btn-periodo-hist-proximo");
 
   const chartSemaforoCanvas = document.getElementById("grafico-exercicio-semaforo");
   const chartSemaforoEmpty = document.getElementById("chart-exercicio-semaforo-empty");
@@ -42,6 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let periodoExibidoId = null;
   let diasSemaforoVisiveis = [];
   const janelaSemaforo = criarJanelaCarrossel(5);
+  const janelaPeriodo = criarJanelaCarrossel(5);
 
   function hojeIso() {
     return getHojeIso();
@@ -268,6 +272,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (ordenados.length === 0) {
       chartCanvas.classList.add("hidden");
       chartEmpty.classList.remove("hidden");
+      btnPeriodoHistAnterior.disabled = true;
+      btnPeriodoHistProximo.disabled = true;
+      janelaPeriodo.resetar();
       if (chart) {
         chart.destroy();
         chart = null;
@@ -275,12 +282,18 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    const inicio = janelaPeriodo.preparar(ordenados.length);
+
     chartCanvas.classList.remove("hidden");
     chartEmpty.classList.add("hidden");
 
-    const labels = ordenados.map((periodo) => formatarDataBR(periodo.dataInicio));
-    const valores = ordenados.map((periodo) => percentualDoPeriodo(periodo));
+    const periodosVisiveis = ordenados.slice(inicio, inicio + janelaPeriodo.tamanho);
+    const labels = periodosVisiveis.map((periodo) => formatarDataBR(periodo.dataInicio));
+    const valores = periodosVisiveis.map((periodo) => percentualDoPeriodo(periodo));
     const cores = valores.map((percentual) => corFaixaVar(getFaixaCorPeriodo(percentual)));
+
+    btnPeriodoHistAnterior.disabled = !janelaPeriodo.podeVoltar();
+    btnPeriodoHistProximo.disabled = !janelaPeriodo.podeAvancar(ordenados.length);
 
     if (chart) chart.destroy();
 
@@ -306,13 +319,23 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         onClick: (event, elements) => {
           if (!elements.length) return;
-          irParaRegistroAlimentarDoDia(ordenados[elements[0].index].dataInicio);
+          irParaRegistroAlimentarDoDia(periodosVisiveis[elements[0].index].dataInicio);
         },
         onHover: (event, elements) => {
           event.native.target.style.cursor = elements.length ? "pointer" : "default";
         },
       },
     });
+  }
+
+  function irParaPeriodoHistAnterior() {
+    janelaPeriodo.voltar();
+    renderGraficoHistorico();
+  }
+
+  function irParaPeriodoHistProximo() {
+    janelaPeriodo.avancar();
+    renderGraficoHistorico();
   }
 
   function corFaixaVar(cor) {
@@ -469,6 +492,10 @@ document.addEventListener("DOMContentLoaded", () => {
   btnSemaforoAnterior.addEventListener("click", irParaSemaforoAnterior);
   btnSemaforoProximo.addEventListener("click", irParaSemaforoProximo);
   anexarSwipeCarrossel(chartCardSemaforo, { aoVoltar: irParaSemaforoAnterior, aoAvancar: irParaSemaforoProximo });
+
+  btnPeriodoHistAnterior.addEventListener("click", irParaPeriodoHistAnterior);
+  btnPeriodoHistProximo.addEventListener("click", irParaPeriodoHistProximo);
+  anexarSwipeCarrossel(chartCardPeriodo, { aoVoltar: irParaPeriodoHistAnterior, aoAvancar: irParaPeriodoHistProximo });
 
   let swipeStartX = null;
   let swipeStartY = null;
