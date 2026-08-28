@@ -30,20 +30,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const chartSemaforoCanvas = document.getElementById("grafico-exercicio-semaforo");
   const chartSemaforoEmpty = document.getElementById("chart-exercicio-semaforo-empty");
+  const chartCardSemaforo = document.getElementById("chart-card-semaforo");
   const btnSemaforoAnterior = document.getElementById("btn-semaforo-anterior");
   const btnSemaforoProximo = document.getElementById("btn-semaforo-proximo");
 
   const ICON_EXCLUIR = `<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>`;
 
-  const JANELA_SEMAFORO = 5;
-
   let chart = null;
   let chartSemaforo = null;
   let periodos = [];
   let periodoExibidoId = null;
-  let semaforoWindowStart = 0;
-  let semaforoInicializado = false;
   let diasSemaforoVisiveis = [];
+  const janelaSemaforo = criarJanelaCarrossel(5);
 
   function hojeIso() {
     return getHojeIso();
@@ -321,11 +319,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return getComputedColor(`--faixa-${cor}`);
   }
 
-  function clampSemaforoWindowStart(total) {
-    const maxStart = Math.max(0, total - JANELA_SEMAFORO);
-    semaforoWindowStart = Math.min(Math.max(0, semaforoWindowStart), maxStart);
-  }
-
   function renderGraficoSemaforo() {
     const dias = getTreinosPorDiaOrdenado();
 
@@ -334,6 +327,7 @@ document.addEventListener("DOMContentLoaded", () => {
       chartSemaforoEmpty.classList.remove("hidden");
       btnSemaforoAnterior.disabled = true;
       btnSemaforoProximo.disabled = true;
+      janelaSemaforo.resetar();
       if (chartSemaforo) {
         chartSemaforo.destroy();
         chartSemaforo = null;
@@ -341,22 +335,18 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    if (!semaforoInicializado) {
-      semaforoWindowStart = Math.max(0, dias.length - JANELA_SEMAFORO);
-      semaforoInicializado = true;
-    }
-    clampSemaforoWindowStart(dias.length);
+    const inicio = janelaSemaforo.preparar(dias.length);
 
     chartSemaforoCanvas.classList.remove("hidden");
     chartSemaforoEmpty.classList.add("hidden");
 
-    diasSemaforoVisiveis = dias.slice(semaforoWindowStart, semaforoWindowStart + JANELA_SEMAFORO);
+    diasSemaforoVisiveis = dias.slice(inicio, inicio + janelaSemaforo.tamanho);
     const labels = diasSemaforoVisiveis.map((dia) => formatarDataBR(dia.data));
     const valores = diasSemaforoVisiveis.map((dia) => dia.percentual);
     const cores = diasSemaforoVisiveis.map((dia) => corFaixaVar(dia.cor));
 
-    btnSemaforoAnterior.disabled = semaforoWindowStart <= 0;
-    btnSemaforoProximo.disabled = semaforoWindowStart + JANELA_SEMAFORO >= dias.length;
+    btnSemaforoAnterior.disabled = !janelaSemaforo.podeVoltar();
+    btnSemaforoProximo.disabled = !janelaSemaforo.podeAvancar(dias.length);
 
     if (chartSemaforo) chartSemaforo.destroy();
 
@@ -392,12 +382,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function irParaSemaforoAnterior() {
-    semaforoWindowStart -= JANELA_SEMAFORO;
+    janelaSemaforo.voltar();
     renderGraficoSemaforo();
   }
 
   function irParaSemaforoProximo() {
-    semaforoWindowStart += JANELA_SEMAFORO;
+    janelaSemaforo.avancar();
     renderGraficoSemaforo();
   }
 
@@ -478,6 +468,7 @@ document.addEventListener("DOMContentLoaded", () => {
   btnExcluirPeriodo.addEventListener("click", excluirPeriodoExibido);
   btnSemaforoAnterior.addEventListener("click", irParaSemaforoAnterior);
   btnSemaforoProximo.addEventListener("click", irParaSemaforoProximo);
+  anexarSwipeCarrossel(chartCardSemaforo, { aoVoltar: irParaSemaforoAnterior, aoAvancar: irParaSemaforoProximo });
 
   let swipeStartX = null;
   let swipeStartY = null;

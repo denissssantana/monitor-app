@@ -201,6 +201,18 @@ a {
   margin: 0;
 }
 
+.topbar__title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.date-chip {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
 .topbar__actions {
   display: flex;
   align-items: center;
@@ -709,6 +721,21 @@ a {
   line-height: 1;
 }
 
+.total-card__track {
+  margin-top: 0.5rem;
+  width: 100%;
+  height: 6px;
+  background: var(--bg-input);
+  border: 2px solid var(--border-strong);
+}
+
+.total-card__fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent-action);
+  transition: width 0.3s ease, background-color 0.2s ease;
+}
+
 /* ---------- Kcal em destaque + barra horizontal ---------- */
 .kcal-overview {
   margin-top: 1.5rem;
@@ -881,6 +908,36 @@ a {
 
 .meal-block__add-btn {
   margin-top: 0.25rem;
+}
+
+.meal-block__totals {
+  margin: 0.75rem 0 1rem;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.meal-block__total {
+  background: var(--bg-input);
+  border: 2px solid var(--border);
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.meal-block__total-label {
+  display: block;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+}
+
+.meal-block__total-value {
+  font-family: var(--font-mega);
+  font-size: 1.2rem;
+  color: var(--accent-action);
+  line-height: 1;
 }
 
 .macro-grid {
@@ -1102,6 +1159,10 @@ a {
   margin: 0;
 }
 
+.carousel-header__info .dashboard-box__title {
+  margin-bottom: 0.15rem;
+}
+
 .exercicio-layout {
   display: flex;
   align-items: flex-start;
@@ -1192,14 +1253,17 @@ a {
 }
 
 .dashboard-box .totals-grid,
-.dashboard-box .kcal-overview__value,
-.dashboard-box .macro-squares {
+.dashboard-box .kcal-overview__value {
   margin-top: 0;
 }
 
 .dashboard-box .chart-empty,
 .dashboard-box .section-empty {
   margin-top: 0;
+}
+
+.dashboard-box .chart-card {
+  margin-top: 1rem;
 }
 
 .dashboard-box--user {
@@ -1264,6 +1328,10 @@ a {
   }
 
   .macro-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .meal-block__totals {
     grid-template-columns: repeat(4, 1fr);
   }
 

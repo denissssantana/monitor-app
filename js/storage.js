@@ -107,9 +107,10 @@
    formulário de novo registro é pré-preenchido com este valor.
 
    monitor_meta_kcal_dia → number (kcal) ou null
-   Meta diária de Kcal, definida uma vez e reaproveitada em todos
-   os dias até o usuário alterá-la. Base do percentual exibido nas
-   barras de status de Alimentação (tela e Dashboard).
+   monitor_meta_pt_dia, monitor_meta_ch_dia, monitor_meta_lp_dia → number (g) ou null
+   Metas diárias de Kcal/PT/CH/LP, definidas uma vez e reaproveitadas
+   em todos os dias até o usuário alterá-las. Base do percentual
+   exibido nas barras de status de Alimentação (tela e Dashboard).
    ========================================================= */
 
 const STORAGE_KEYS = {
@@ -123,6 +124,9 @@ const STORAGE_KEYS = {
   INDICE_PERIODO_EXIBIDO: "monitor_indice_periodo_exibido",
   ALTURA_ATUAL: "monitor_altura_atual",
   META_KCAL_DIA: "monitor_meta_kcal_dia",
+  META_PT_DIA: "monitor_meta_pt_dia",
+  META_CH_DIA: "monitor_meta_ch_dia",
+  META_LP_DIA: "monitor_meta_lp_dia",
 };
 
 function getHojeIso() {
@@ -301,12 +305,77 @@ function setMetaKcalDia(valor) {
   localStorage.setItem(STORAGE_KEYS.META_KCAL_DIA, String(valor));
 }
 
-function getFaixaCorKcal(kcalConsumida, metaKcalDia) {
-  if (!metaKcalDia) return null;
-  const percentual = (kcalConsumida / metaKcalDia) * 100;
-  if (percentual <= 100) return "verde";
-  if (percentual <= 120) return "amarelo";
+function getMetaPtDia() {
+  const raw = localStorage.getItem(STORAGE_KEYS.META_PT_DIA);
+  return raw !== null ? parseFloat(raw) : null;
+}
+
+function setMetaPtDia(valor) {
+  localStorage.setItem(STORAGE_KEYS.META_PT_DIA, String(valor));
+}
+
+function getMetaChDia() {
+  const raw = localStorage.getItem(STORAGE_KEYS.META_CH_DIA);
+  return raw !== null ? parseFloat(raw) : null;
+}
+
+function setMetaChDia(valor) {
+  localStorage.setItem(STORAGE_KEYS.META_CH_DIA, String(valor));
+}
+
+function getMetaLpDia() {
+  const raw = localStorage.getItem(STORAGE_KEYS.META_LP_DIA);
+  return raw !== null ? parseFloat(raw) : null;
+}
+
+function setMetaLpDia(valor) {
+  localStorage.setItem(STORAGE_KEYS.META_LP_DIA, String(valor));
+}
+
+function getCorBarraPadrao(percentual, limiteAmarelo, limiteVermelho) {
+  if (percentual <= limiteAmarelo) return "verde";
+  if (percentual <= limiteVermelho) return "amarelo";
   return "vermelho";
+}
+
+function getCorBarraProteina(percentual) {
+  if (percentual <= 50) return "vermelho";
+  if (percentual <= 80) return "amarelo";
+  return "verde";
+}
+
+function getFaixaCorPercentual(valorConsumido, meta) {
+  if (!meta) return null;
+  const percentual = (valorConsumido / meta) * 100;
+  return getCorBarraPadrao(percentual, 100, 120);
+}
+
+function getFaixaCorKcal(kcalConsumida, metaKcalDia) {
+  return getFaixaCorPercentual(kcalConsumida, metaKcalDia);
+}
+
+function getFaixaCorPt(ptConsumido, metaPtDia) {
+  if (!metaPtDia) return null;
+  const percentual = (ptConsumido / metaPtDia) * 100;
+  return getCorBarraProteina(percentual);
+}
+
+function getFaixaCorChLp(consumido, meta) {
+  if (!meta) return null;
+  const percentual = (consumido / meta) * 100;
+  return getCorBarraPadrao(percentual, 80, 100);
+}
+
+function getHistoricoKcalPorDia() {
+  const raw = localStorage.getItem(STORAGE_KEYS.REGISTRO_ALIMENTAR);
+  const registroCompleto = raw ? JSON.parse(raw) : {};
+  const meta = getMetaKcalDia();
+
+  return Object.keys(registroCompleto)
+    .map((dataIso) => ({ data: dataIso, ...getTotaisAlimentaresDoDia(dataIso) }))
+    .filter((dia) => dia.temRegistros)
+    .sort((a, b) => a.data.localeCompare(b.data))
+    .map((dia) => ({ ...dia, cor: getFaixaCorKcal(dia.kcal, meta) }));
 }
 
 function getAlimentosBase() {

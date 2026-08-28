@@ -3,17 +3,26 @@
    histórica via ?data=yyyy-mm-dd) por blocos de refeição, calcula os
    totais de macros/kcal contra a meta diária, e usa a base de
    alimentos (cadastrada em cadastro-alimentos.html) para autocomplete
-   e cálculo proporcional de macros pela quantidade real consumida. */
+   e cálculo proporcional de macros pela quantidade real consumida.
+   A navegação entre dias (carrossel) troca `dataSelecionada` em
+   memória e re-renderiza — não recarrega a página. */
 
 document.addEventListener("DOMContentLoaded", () => {
   const totalKcalEl = document.getElementById("total-kcal");
   const totalPtEl = document.getElementById("total-pt");
   const totalChEl = document.getElementById("total-ch");
   const totalLpEl = document.getElementById("total-lp");
-  const kcalOverviewTitleEl = document.getElementById("kcal-overview-title");
   const metaKcalLabelEl = document.getElementById("meta-kcal-label");
   const metaKcalEmptyEl = document.getElementById("meta-kcal-empty");
   const kcalProgressFillEl = document.getElementById("kcal-progress-fill");
+  const ptProgressFillEl = document.getElementById("pt-progress-fill");
+  const chProgressFillEl = document.getElementById("ch-progress-fill");
+  const lpProgressFillEl = document.getElementById("lp-progress-fill");
+
+  const carouselDiaEl = document.getElementById("carousel-dia");
+  const btnDiaAnterior = document.getElementById("btn-dia-anterior");
+  const btnDiaProximo = document.getElementById("btn-dia-proximo");
+  const diaRangeEl = document.getElementById("dia-range");
 
   const historicoBannerEl = document.getElementById("historico-banner");
   const historicoBannerTextoEl = document.getElementById("historico-banner-texto");
@@ -22,6 +31,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalMetaKcal = document.getElementById("modal-meta-kcal");
   const formMetaKcal = document.getElementById("form-meta-kcal");
   const metaKcalInput = document.getElementById("meta-kcal-input");
+  const metaPtInput = document.getElementById("meta-pt-input");
+  const metaChInput = document.getElementById("meta-ch-input");
+  const metaLpInput = document.getElementById("meta-lp-input");
   const metaKcalFeedback = document.getElementById("meta-kcal-feedback");
   const btnCancelarMeta = document.getElementById("btn-cancelar-meta");
 
@@ -30,6 +42,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const refeicoesContainer = document.getElementById("refeicoes-container");
   const refeicoesEmpty = document.getElementById("refeicoes-empty");
   const datalistAlimentos = document.getElementById("datalist-alimentos");
+
+  const chartKcalDiaCanvas = document.getElementById("grafico-kcal-dia");
+  const chartKcalDiaEmpty = document.getElementById("chart-kcal-dia-empty");
+  const chartCardKcalDia = chartKcalDiaCanvas.closest(".chart-card");
+  const btnKcalDiaAnterior = document.getElementById("btn-kcal-dia-anterior");
+  const btnKcalDiaProximo = document.getElementById("btn-kcal-dia-proximo");
 
   const modalEditarItem = document.getElementById("modal-editar-item-refeicao");
   const formEditarItem = document.getElementById("form-editar-item-refeicao");
@@ -54,8 +72,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const dataHoje = getHojeIso();
   const params = new URLSearchParams(window.location.search);
   const dataParam = params.get("data");
-  const dataSelecionada = dataParam && /^\d{4}-\d{2}-\d{2}$/.test(dataParam) ? dataParam : dataHoje;
-  const modoHoje = dataSelecionada === dataHoje;
+  let dataSelecionada = dataParam && /^\d{4}-\d{2}-\d{2}$/.test(dataParam) ? dataParam : dataHoje;
+
+  let chartKcalDia = null;
+  const janelaKcalDia = criarJanelaCarrossel(5);
+
+  function ehHoje() {
+    return dataSelecionada === dataHoje;
+  }
 
   function gerarId() {
     return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -72,17 +96,66 @@ document.addEventListener("DOMContentLoaded", () => {
     return div.innerHTML;
   }
 
-  function configurarModoExibicao() {
-    if (modoHoje) {
-      kcalOverviewTitleEl.textContent = "Kcal Hoje";
-      historicoBannerEl.classList.add("hidden");
-      refeicoesEmpty.textContent = "Nenhuma refeição registrada hoje. Adicione a primeira acima.";
-    } else {
-      kcalOverviewTitleEl.textContent = `Kcal em ${formatarDataBR(dataSelecionada)}`;
+  function getComputedColor(varName) {
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+  }
+
+  function irParaDia(novaData) {
+    if (novaData > dataHoje) return;
+    dataSelecionada = novaData;
+    refeicoesComFormAberto.clear();
+    fecharModalEdicaoItem();
+    renderTudo();
+  }
+
+  function irParaDiaAnterior() {
+    irParaDia(addDiasIso(dataSelecionada, -1));
+  }
+
+  function irParaDiaProximo() {
+    irParaDia(addDiasIso(dataSelecionada, 1));
+  }
+
+  function atualizarCarouselDia() {
+    diaRangeEl.textContent = ehHoje() ? `Hoje · ${formatarDataBR(dataSelecionada)}` : formatarDataBR(dataSelecionada);
+    btnDiaProximo.disabled = dataSelecionada >= dataHoje;
+
+    historicoBannerEl.classList.toggle("hidden", ehHoje());
+    if (!ehHoje()) {
       historicoBannerTextoEl.textContent = `Histórico — ${formatarDataBR(dataSelecionada)}`;
-      historicoBannerEl.classList.remove("hidden");
-      refeicoesEmpty.textContent = "Nenhum registro alimentar para esta data.";
     }
+
+    refeicoesEmpty.textContent = ehHoje()
+      ? "Nenhuma refeição registrada hoje. Adicione a primeira acima."
+      : "Nenhum registro alimentar para esta data.";
+  }
+
+  function calcularTotaisRefeicao(itens) {
+    const totais = { pt: 0, ch: 0, lp: 0, kcal: 0 };
+    itens.forEach((item) => {
+      totais.pt += Number(item.pt) || 0;
+      totais.ch += Number(item.ch) || 0;
+      totais.lp += Number(item.lp) || 0;
+      totais.kcal += Number(item.kcal) || 0;
+    });
+    return totais;
+  }
+
+  function aplicarBarraMacro(fillEl, consumido, meta, corFn) {
+    fillEl.classList.remove(
+      "progress-bar-horizontal__fill--verde",
+      "progress-bar-horizontal__fill--amarelo",
+      "progress-bar-horizontal__fill--vermelho"
+    );
+
+    if (!meta) {
+      fillEl.style.width = "0%";
+      return;
+    }
+
+    fillEl.style.width = `${Math.min(100, Math.round((consumido / meta) * 100))}%`;
+    const cor = corFn(consumido, meta);
+    if (cor) fillEl.classList.add(`progress-bar-horizontal__fill--${cor}`);
   }
 
   function renderKcalOverview() {
@@ -113,11 +186,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const cor = getFaixaCorKcal(totais.kcal, meta);
       if (cor) kcalProgressFillEl.classList.add(`progress-bar-horizontal__fill--${cor}`);
     }
+
+    aplicarBarraMacro(ptProgressFillEl, totais.pt, getMetaPtDia(), getFaixaCorPt);
+    aplicarBarraMacro(chProgressFillEl, totais.ch, getMetaChDia(), getFaixaCorChLp);
+    aplicarBarraMacro(lpProgressFillEl, totais.lp, getMetaLpDia(), getFaixaCorChLp);
   }
 
   function abrirModalMeta() {
     const meta = getMetaKcalDia();
     metaKcalInput.value = meta || "";
+    metaPtInput.value = getMetaPtDia() || "";
+    metaChInput.value = getMetaChDia() || "";
+    metaLpInput.value = getMetaLpDia() || "";
     metaKcalFeedback.textContent = "";
     modalMetaKcal.classList.remove("hidden");
   }
@@ -144,8 +224,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     setMetaKcalDia(valor);
+
+    const valorPt = parseFloat(metaPtInput.value);
+    if (valorPt > 0) setMetaPtDia(valorPt);
+    const valorCh = parseFloat(metaChInput.value);
+    if (valorCh > 0) setMetaChDia(valorCh);
+    const valorLp = parseFloat(metaLpInput.value);
+    if (valorLp > 0) setMetaLpDia(valorLp);
+
     fecharModalMeta();
-    renderKcalOverview();
+    renderTudo();
   });
 
   function renderDatalist() {
@@ -224,6 +312,32 @@ document.addEventListener("DOMContentLoaded", () => {
               .join("")}</ul>`
           : "";
 
+      const totaisHtml =
+        refeicao.itens.length > 0
+          ? (() => {
+              const totais = calcularTotaisRefeicao(refeicao.itens);
+              return `
+        <div class="meal-block__totals">
+          <div class="meal-block__total">
+            <span class="meal-block__total-label">Kcal</span>
+            <span class="meal-block__total-value">${Math.round(totais.kcal)}</span>
+          </div>
+          <div class="meal-block__total">
+            <span class="meal-block__total-label">PT</span>
+            <span class="meal-block__total-value">${totais.pt.toFixed(1)}</span>
+          </div>
+          <div class="meal-block__total">
+            <span class="meal-block__total-label">CH</span>
+            <span class="meal-block__total-value">${totais.ch.toFixed(1)}</span>
+          </div>
+          <div class="meal-block__total">
+            <span class="meal-block__total-label">LP</span>
+            <span class="meal-block__total-value">${totais.lp.toFixed(1)}</span>
+          </div>
+        </div>`;
+            })()
+          : "";
+
       const formAberto = refeicao.itens.length === 0 || refeicoesComFormAberto.has(refeicao.id);
 
       const formHtml = formAberto
@@ -263,6 +377,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <button type="button" class="icon-btn icon-btn--delete" data-action="remover-refeicao" aria-label="Remover refeição">${ICON_EXCLUIR}</button>
         </div>
         ${itensHtml}
+        ${totaisHtml}
         ${formHtml}
       `;
 
@@ -270,9 +385,81 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function corFaixaVar(cor) {
+    return cor ? getComputedColor(`--faixa-${cor}`) : getComputedColor("--accent-action");
+  }
+
+  function renderGraficoKcalDia() {
+    const historico = getHistoricoKcalPorDia();
+
+    if (historico.length === 0) {
+      chartKcalDiaCanvas.classList.add("hidden");
+      chartKcalDiaEmpty.classList.remove("hidden");
+      btnKcalDiaAnterior.disabled = true;
+      btnKcalDiaProximo.disabled = true;
+      janelaKcalDia.resetar();
+      if (chartKcalDia) {
+        chartKcalDia.destroy();
+        chartKcalDia = null;
+      }
+      return;
+    }
+
+    const inicio = janelaKcalDia.preparar(historico.length);
+
+    chartKcalDiaCanvas.classList.remove("hidden");
+    chartKcalDiaEmpty.classList.add("hidden");
+
+    const visiveis = historico.slice(inicio, inicio + janelaKcalDia.tamanho);
+    const labels = visiveis.map((dia) => formatarDataBR(dia.data));
+    const valores = visiveis.map((dia) => Math.round(dia.kcal));
+    const cores = visiveis.map((dia) => corFaixaVar(dia.cor));
+
+    const meta = getMetaKcalDia();
+    const maiorKcal = Math.max(...historico.map((dia) => dia.kcal), meta || 0);
+    const eixoMax = maiorKcal > 0 ? Math.ceil(maiorKcal * 1.15) : 100;
+
+    btnKcalDiaAnterior.disabled = !janelaKcalDia.podeVoltar();
+    btnKcalDiaProximo.disabled = !janelaKcalDia.podeAvancar(historico.length);
+
+    if (chartKcalDia) chartKcalDia.destroy();
+
+    chartKcalDia = new Chart(chartKcalDiaCanvas.getContext("2d"), {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Kcal",
+            data: valores,
+            backgroundColor: cores,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+        },
+        scales: {
+          y: { beginAtZero: true, max: eixoMax },
+        },
+        onClick: (event, elements) => {
+          if (!elements.length) return;
+          irParaDia(visiveis[elements[0].index].data);
+        },
+        onHover: (event, elements) => {
+          event.native.target.style.cursor = elements.length ? "pointer" : "default";
+        },
+      },
+    });
+  }
+
   function renderTudo() {
+    atualizarCarouselDia();
     renderRefeicoes();
     renderKcalOverview();
+    renderGraficoKcalDia();
   }
 
   formAddRefeicao.addEventListener("submit", (event) => {
@@ -450,11 +637,28 @@ document.addEventListener("DOMContentLoaded", () => {
     renderTudo();
   });
 
-  configurarModoExibicao();
+  function irParaKcalDiaAnterior() {
+    janelaKcalDia.voltar();
+    renderGraficoKcalDia();
+  }
+
+  function irParaKcalDiaProximo() {
+    janelaKcalDia.avancar();
+    renderGraficoKcalDia();
+  }
+
+  btnDiaAnterior.addEventListener("click", irParaDiaAnterior);
+  btnDiaProximo.addEventListener("click", irParaDiaProximo);
+  anexarSwipeCarrossel(carouselDiaEl, { aoVoltar: irParaDiaAnterior, aoAvancar: irParaDiaProximo });
+
+  btnKcalDiaAnterior.addEventListener("click", irParaKcalDiaAnterior);
+  btnKcalDiaProximo.addEventListener("click", irParaKcalDiaProximo);
+  anexarSwipeCarrossel(chartCardKcalDia, { aoVoltar: irParaKcalDiaAnterior, aoAvancar: irParaKcalDiaProximo });
+
   renderDatalist();
   renderTudo();
 
-  if (modoHoje && !getMetaKcalDia()) {
+  if (ehHoje() && !getMetaKcalDia()) {
     abrirModalMeta();
   }
 });

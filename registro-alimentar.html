@@ -63,9 +63,22 @@
     </div>
 
     <section class="kcal-overview">
+      <div id="carousel-dia" class="carousel-header">
+        <button type="button" id="btn-dia-anterior" class="icon-btn" aria-label="Dia anterior">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+        </button>
+        <div class="carousel-header__info">
+          <p class="list-card__title">Alimentação</p>
+          <p id="dia-range" class="carousel-header__range"></p>
+        </div>
+        <button type="button" id="btn-dia-proximo" class="icon-btn" aria-label="Próximo dia">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+        </button>
+      </div>
+
       <div class="kcal-overview__header">
-        <p class="kcal-overview__title" id="kcal-overview-title">Kcal Hoje</p>
-        <button type="button" id="btn-editar-meta" class="icon-btn icon-btn--edit" aria-label="Editar meta de Kcal">
+        <p class="kcal-overview__title" id="kcal-overview-title">Kcal</p>
+        <button type="button" id="btn-editar-meta" class="icon-btn icon-btn--edit" aria-label="Editar metas diárias">
           <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
         </button>
       </div>
@@ -83,16 +96,35 @@
         <div class="total-card">
           <p class="total-card__label">PT</p>
           <p id="total-pt" class="total-card__value">0</p>
+          <div class="total-card__track"><div id="pt-progress-fill" class="total-card__fill"></div></div>
         </div>
         <div class="total-card">
           <p class="total-card__label">CH</p>
           <p id="total-ch" class="total-card__value">0</p>
+          <div class="total-card__track"><div id="ch-progress-fill" class="total-card__fill"></div></div>
         </div>
         <div class="total-card">
           <p class="total-card__label">LP</p>
           <p id="total-lp" class="total-card__value">0</p>
+          <div class="total-card__track"><div id="lp-progress-fill" class="total-card__fill"></div></div>
         </div>
       </div>
+    </section>
+
+    <section class="chart-card">
+      <div class="chart-card__header">
+        <p class="chart-card__title">Kcal por Dia</p>
+        <div class="chart-card__nav">
+          <button type="button" id="btn-kcal-dia-anterior" class="icon-btn" aria-label="Dias anteriores">
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+          </button>
+          <button type="button" id="btn-kcal-dia-proximo" class="icon-btn" aria-label="Próximos dias">
+            <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+          </button>
+        </div>
+      </div>
+      <canvas id="grafico-kcal-dia" height="220"></canvas>
+      <p id="chart-kcal-dia-empty" class="chart-empty hidden">Nenhum registro alimentar ainda.</p>
     </section>
 
     <form id="form-add-refeicao" class="card" novalidate>
@@ -125,11 +157,17 @@
 
   <div id="modal-meta-kcal" class="modal-overlay hidden">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-meta-kcal-title">
-      <h2 id="modal-meta-kcal-title" class="modal__title">Meta Diária de Kcal</h2>
+      <h2 id="modal-meta-kcal-title" class="modal__title">Metas Diárias</h2>
       <form id="form-meta-kcal" novalidate>
         <div class="field">
           <label for="meta-kcal-input">Kcal por dia</label>
           <input type="number" id="meta-kcal-input" step="1" min="1" inputmode="decimal" required />
+        </div>
+
+        <div class="macro-grid">
+          <div class="field"><label for="meta-pt-input">PT (g)</label><input type="number" id="meta-pt-input" step="0.1" min="0" inputmode="decimal" /></div>
+          <div class="field"><label for="meta-ch-input">CH (g)</label><input type="number" id="meta-ch-input" step="0.1" min="0" inputmode="decimal" /></div>
+          <div class="field"><label for="meta-lp-input">LP (g)</label><input type="number" id="meta-lp-input" step="0.1" min="0" inputmode="decimal" /></div>
         </div>
 
         <p id="meta-kcal-feedback" class="form-feedback"></p>
@@ -195,7 +233,9 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="js/storage.js"></script>
+  <script src="js/carousel-chart.js"></script>
   <script src="js/theme.js"></script>
   <script src="js/menu.js"></script>
   <script src="js/registro-alimentar.js"></script>
