@@ -62,7 +62,7 @@
       <a href="registro-alimentar.html" class="historico-banner__link">Ver hoje</a>
     </div>
 
-    <section class="kcal-overview">
+    <section class="list-card">
       <div id="carousel-dia" class="carousel-header">
         <button type="button" id="btn-dia-anterior" class="icon-btn" aria-label="Dia anterior">
           <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
@@ -76,6 +76,33 @@
         </button>
       </div>
 
+      <div class="field">
+        <label for="dia-input">Ir para data</label>
+        <input type="date" id="dia-input" />
+      </div>
+    </section>
+
+    <form id="form-add-refeicao" class="card" novalidate>
+      <div class="field">
+        <label for="titulo-refeicao">Refeição</label>
+        <select id="titulo-refeicao" name="titulo-refeicao">
+          <option value="Café da Manhã">Café da Manhã</option>
+          <option value="Lanche">Lanche</option>
+          <option value="Almoço">Almoço</option>
+          <option value="Jantar">Jantar</option>
+          <option value="Ceia">Ceia</option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="btn btn-primary btn-block">Adicionar Refeição</button>
+      </div>
+    </form>
+
+    <div id="refeicoes-container"></div>
+    <p id="refeicoes-empty" class="section-empty">Nenhuma refeição registrada hoje. Adicione a primeira acima.</p>
+
+    <section class="kcal-overview">
       <div class="kcal-overview__header">
         <p class="kcal-overview__title" id="kcal-overview-title">Kcal</p>
         <button type="button" id="btn-editar-meta" class="icon-btn icon-btn--edit" aria-label="Editar metas diárias">
@@ -90,6 +117,7 @@
           <div id="kcal-progress-fill" class="progress-bar-horizontal__fill" style="width: 0%"></div>
         </div>
       </div>
+      <p id="kcal-restante" class="kcal-overview__restante hidden"></p>
       <p id="meta-kcal-empty" class="form-feedback hidden">Defina sua meta diária para acompanhar o progresso.</p>
 
       <div class="macro-squares">
@@ -126,26 +154,6 @@
       <canvas id="grafico-kcal-dia" height="220"></canvas>
       <p id="chart-kcal-dia-empty" class="chart-empty hidden">Nenhum registro alimentar ainda.</p>
     </section>
-
-    <form id="form-add-refeicao" class="card" novalidate>
-      <div class="field">
-        <label for="titulo-refeicao">Refeição</label>
-        <select id="titulo-refeicao" name="titulo-refeicao">
-          <option value="Café da Manhã">Café da Manhã</option>
-          <option value="Lanche">Lanche</option>
-          <option value="Almoço">Almoço</option>
-          <option value="Jantar">Jantar</option>
-          <option value="Ceia">Ceia</option>
-        </select>
-      </div>
-
-      <div class="actions">
-        <button type="submit" class="btn btn-primary btn-block">Adicionar Refeição</button>
-      </div>
-    </form>
-
-    <div id="refeicoes-container"></div>
-    <p id="refeicoes-empty" class="section-empty">Nenhuma refeição registrada hoje. Adicione a primeira acima.</p>
 
     <div class="actions">
       <a href="cadastro-alimentos.html" class="btn btn-secondary btn-block">Gerenciar base de alimentos</a>

@@ -14,6 +14,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const chartImcCanvas = document.getElementById("grafico-imc-dash");
   const chartImcEmpty = document.getElementById("imc-dash-empty");
 
+  const pesoAtualDashTextoEl = document.getElementById("peso-atual-dash-texto");
+  const chartPesoCanvas = document.getElementById("grafico-peso-dash");
+  const chartPesoEmpty = document.getElementById("peso-dash-empty");
+  const pesoProgressoBloco = document.getElementById("peso-progresso-dash-bloco");
+  const pesoProgressoEmpty = document.getElementById("peso-progresso-dash-empty");
+  const pesoProgressoPercentEl = document.getElementById("peso-progresso-dash-percent");
+  const pesoProgressoValoresEl = document.getElementById("peso-progresso-dash-valores");
+  const pesoProgressoFillEl = document.getElementById("peso-progress-dash-fill");
+
   const dashDiaAnterior = document.getElementById("dash-dia-anterior");
   const dashDiaProximo = document.getElementById("dash-dia-proximo");
   const dashDiaRangeEl = document.getElementById("dash-dia-range");
@@ -23,6 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const kcalValueEl = document.getElementById("dash-kcal-value");
   const kcalMetaEl = document.getElementById("dash-kcal-meta");
   const kcalFillEl = document.getElementById("dash-kcal-fill");
+  const kcalRestanteEl = document.getElementById("dash-kcal-restante");
   const totalPtEl = document.getElementById("dash-total-pt");
   const totalChEl = document.getElementById("dash-total-ch");
   const totalLpEl = document.getElementById("dash-total-lp");
@@ -117,6 +127,99 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function renderPesoAtualTexto() {
+    const ultimoRegistro = getUltimoRegistroImc();
+    pesoAtualDashTextoEl.textContent = ultimoRegistro ? `Peso Atual — ${ultimoRegistro.peso} kg` : "";
+  }
+
+  function renderGraficoPeso() {
+    const historico = getHistoricoImcOrdenado();
+
+    if (historico.length === 0) {
+      chartPesoCanvas.classList.add("hidden");
+      chartPesoEmpty.classList.remove("hidden");
+      return;
+    }
+
+    chartPesoCanvas.classList.remove("hidden");
+    chartPesoEmpty.classList.add("hidden");
+
+    const labels = historico.map((registro) => formatarDataBR(registro.data));
+    const valores = historico.map((registro) => registro.peso);
+    const corAction = getComputedColor("--accent-action");
+
+    new Chart(chartPesoCanvas.getContext("2d"), {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Peso (kg)",
+            data: valores,
+            borderColor: corAction,
+            backgroundColor: corAction + "26",
+            pointBackgroundColor: corAction,
+            pointRadius: 3,
+            tension: 0.3,
+            fill: true,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+        },
+        scales: {
+          y: { beginAtZero: false },
+        },
+      },
+    });
+  }
+
+  function renderProgressoMetaPeso() {
+    const progresso = getProgressoMetaPeso();
+
+    pesoProgressoFillEl.classList.remove(
+      "progress-bar-horizontal__fill--verde",
+      "progress-bar-horizontal__fill--amarelo",
+      "progress-bar-horizontal__fill--vermelho"
+    );
+
+    if (!progresso.temDados || !progresso.temMeta) {
+      pesoProgressoBloco.classList.add("hidden");
+      pesoProgressoEmpty.classList.remove("hidden");
+      return;
+    }
+
+    pesoProgressoBloco.classList.remove("hidden");
+    pesoProgressoEmpty.classList.add("hidden");
+
+    pesoProgressoPercentEl.textContent = `${progresso.percentual}%`;
+    pesoProgressoValoresEl.textContent = `${progresso.pesoAtual} kg / meta ${progresso.meta} kg`;
+    pesoProgressoFillEl.style.width = `${progresso.percentual}%`;
+    if (progresso.cor) pesoProgressoFillEl.classList.add(`progress-bar-horizontal__fill--${progresso.cor}`);
+  }
+
+  function renderKcalRestante(el, kcalConsumida, meta) {
+    el.classList.remove("kcal-overview__restante--vermelho");
+
+    if (!meta) {
+      el.classList.add("hidden");
+      el.textContent = "";
+      return;
+    }
+
+    el.classList.remove("hidden");
+    const restante = Math.round(meta - kcalConsumida);
+    if (restante >= 0) {
+      el.textContent = `${restante} kcal restantes`;
+    } else {
+      el.textContent = `${restante} kcal (meta excedida)`;
+      el.classList.add("kcal-overview__restante--vermelho");
+    }
+  }
+
   function aplicarBarraMacro(fillEl, consumido, meta, corFn) {
     fillEl.classList.remove(
       "progress-bar-horizontal__fill--verde",
@@ -140,19 +243,22 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function irParaDiaProximoDash() {
-    const proximo = addDiasIso(dataAlimentacaoAtual, 1);
-    if (proximo > hojeIso()) return;
-    dataAlimentacaoAtual = proximo;
+    dataAlimentacaoAtual = addDiasIso(dataAlimentacaoAtual, 1);
     renderAlimentacao();
   }
 
   function renderAlimentacao() {
     const totais = getTotaisAlimentaresDoDia(dataAlimentacaoAtual);
     const meta = getMetaKcalDia();
+    const hoje = hojeIso();
 
-    const ehHojeAlimentacao = dataAlimentacaoAtual === hojeIso();
-    dashDiaRangeEl.textContent = ehHojeAlimentacao ? `Hoje · ${formatarDataBR(dataAlimentacaoAtual)}` : formatarDataBR(dataAlimentacaoAtual);
-    dashDiaProximo.disabled = dataAlimentacaoAtual >= hojeIso();
+    if (dataAlimentacaoAtual === hoje) {
+      dashDiaRangeEl.textContent = `Hoje · ${formatarDataBR(dataAlimentacaoAtual)}`;
+    } else if (dataAlimentacaoAtual > hoje) {
+      dashDiaRangeEl.textContent = `Planejado · ${formatarDataBR(dataAlimentacaoAtual)}`;
+    } else {
+      dashDiaRangeEl.textContent = formatarDataBR(dataAlimentacaoAtual);
+    }
     dashAlimentacaoLink.href = `registro-alimentar.html?data=${dataAlimentacaoAtual}`;
 
     kcalValueEl.textContent = Math.round(totais.kcal);
@@ -177,6 +283,8 @@ document.addEventListener("DOMContentLoaded", () => {
       kcalMetaEl.textContent = "--";
       kcalFillEl.style.width = "0%";
     }
+
+    renderKcalRestante(kcalRestanteEl, totais.kcal, meta);
 
     aplicarBarraMacro(ptFillEl, totais.pt, getMetaPtDia(), getFaixaCorPt);
     aplicarBarraMacro(chFillEl, totais.ch, getMetaChDia(), getFaixaCorChLp);
@@ -359,6 +467,9 @@ document.addEventListener("DOMContentLoaded", () => {
   anexarSwipeCarrossel(dashboardBoxExercicio, { aoVoltar: irParaPeriodoAnteriorDash, aoAvancar: irParaPeriodoProximoDash });
 
   renderUsuario();
+  renderPesoAtualTexto();
+  renderGraficoPeso();
+  renderProgressoMetaPeso();
   renderGraficoImc();
   renderAlimentacao();
   renderGraficoKcalDiaDash();

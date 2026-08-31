@@ -106,6 +106,20 @@
    própria altura (necessária para o cálculo daquele IMC), mas o
    formulário de novo registro é pré-preenchido com este valor.
 
+   monitor_peso_inicial → number (kg) ou null
+   Peso de referência (ponto de partida) definido manualmente pelo
+   usuário na tela de Dados Pessoais — não é mais inferido a cada
+   render a partir do primeiro registro do histórico. Na primeira
+   leitura sem valor salvo, assume como sugestão o primeiro registro
+   de monitor_historico_imc e já persiste esse valor (mesmo padrão de
+   monitor_altura_atual); a partir daí só muda se o usuário editar.
+
+   monitor_meta_peso → number (kg) ou null
+   Meta de peso do usuário, definida uma vez e sempre editável na
+   tela de Dados Pessoais. O progresso até a meta é calculado a
+   partir de monitor_peso_inicial, do último registro de
+   monitor_historico_imc (peso atual) e desta meta.
+
    monitor_meta_kcal_dia → number (kcal) ou null
    monitor_meta_pt_dia, monitor_meta_ch_dia, monitor_meta_lp_dia → number (g) ou null
    Metas diárias de Kcal/PT/CH/LP, definidas uma vez e reaproveitadas
@@ -123,6 +137,8 @@ const STORAGE_KEYS = {
   PERIODOS_EXERCICIO: "monitor_periodos_exercicio",
   INDICE_PERIODO_EXIBIDO: "monitor_indice_periodo_exibido",
   ALTURA_ATUAL: "monitor_altura_atual",
+  PESO_INICIAL: "monitor_peso_inicial",
+  META_PESO: "monitor_meta_peso",
   META_KCAL_DIA: "monitor_meta_kcal_dia",
   META_PT_DIA: "monitor_meta_pt_dia",
   META_CH_DIA: "monitor_meta_ch_dia",
@@ -231,6 +247,65 @@ function getAlturaAtual() {
 
 function setAlturaAtual(altura) {
   localStorage.setItem(STORAGE_KEYS.ALTURA_ATUAL, String(altura));
+}
+
+function getInitialWeight() {
+  const raw = localStorage.getItem(STORAGE_KEYS.PESO_INICIAL);
+  if (raw !== null) return parseFloat(raw);
+
+  const historico = getHistoricoImcOrdenado();
+  if (historico.length > 0) {
+    setInitialWeight(historico[0].peso);
+    return historico[0].peso;
+  }
+
+  return null;
+}
+
+function setInitialWeight(valor) {
+  localStorage.setItem(STORAGE_KEYS.PESO_INICIAL, String(valor));
+}
+
+function getWeightGoal() {
+  const raw = localStorage.getItem(STORAGE_KEYS.META_PESO);
+  return raw !== null ? parseFloat(raw) : null;
+}
+
+function setWeightGoal(valor) {
+  localStorage.setItem(STORAGE_KEYS.META_PESO, String(valor));
+}
+
+function getFaixaCorMetaPeso(percentual) {
+  if (percentual <= 50) return "vermelho";
+  if (percentual <= 80) return "amarelo";
+  return "verde";
+}
+
+function getProgressoMetaPeso() {
+  const historico = getHistoricoImcOrdenado();
+  const meta = getWeightGoal();
+  const pesoInicial = getInitialWeight();
+  const temDados = historico.length > 0;
+
+  if (!temDados || !meta || pesoInicial === null) {
+    return { temDados, temMeta: !!meta, percentual: 0, cor: null, pesoInicial, pesoAtual: null, meta };
+  }
+
+  const pesoAtual = historico[historico.length - 1].peso;
+  const distanciaTotal = Math.abs(pesoInicial - meta);
+  const distanciaPercorrida = Math.abs(pesoInicial - pesoAtual);
+  const percentualBruto = distanciaTotal === 0 ? 100 : (distanciaPercorrida / distanciaTotal) * 100;
+  const percentual = Math.max(0, Math.min(100, Math.round(percentualBruto)));
+
+  return {
+    temDados: true,
+    temMeta: true,
+    percentual,
+    cor: getFaixaCorMetaPeso(percentual),
+    pesoInicial,
+    pesoAtual,
+    meta,
+  };
 }
 
 function getRegistroAlimentarDia(dataIso) {
@@ -366,16 +441,22 @@ function getFaixaCorChLp(consumido, meta) {
   return getCorBarraPadrao(percentual, 80, 100);
 }
 
-function getHistoricoKcalPorDia() {
+function getDatasComRegistroAlimentar() {
   const raw = localStorage.getItem(STORAGE_KEYS.REGISTRO_ALIMENTAR);
   const registroCompleto = raw ? JSON.parse(raw) : {};
-  const meta = getMetaKcalDia();
 
   return Object.keys(registroCompleto)
-    .map((dataIso) => ({ data: dataIso, ...getTotaisAlimentaresDoDia(dataIso) }))
-    .filter((dia) => dia.temRegistros)
-    .sort((a, b) => a.data.localeCompare(b.data))
-    .map((dia) => ({ ...dia, cor: getFaixaCorKcal(dia.kcal, meta) }));
+    .filter((dataIso) => getTotaisAlimentaresDoDia(dataIso).temRegistros)
+    .sort((a, b) => a.localeCompare(b));
+}
+
+function getHistoricoKcalPorDia() {
+  const meta = getMetaKcalDia();
+
+  return getDatasComRegistroAlimentar().map((dataIso) => {
+    const totais = getTotaisAlimentaresDoDia(dataIso);
+    return { data: dataIso, ...totais, cor: getFaixaCorKcal(totais.kcal, meta) };
+  });
 }
 
 function getAlimentosBase() {

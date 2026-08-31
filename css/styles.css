@@ -804,6 +804,62 @@ a {
   background: var(--faixa-vermelho);
 }
 
+.kcal-overview__restante {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.kcal-overview__restante--vermelho {
+  color: var(--faixa-vermelho);
+}
+
+/* ---------- Progresso da meta de peso ---------- */
+.weight-progress {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 2px solid var(--border);
+}
+
+.weight-progress__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.weight-progress__percent {
+  font-family: var(--font-mega);
+  font-size: 1.4rem;
+  color: var(--accent-action);
+}
+
+.weight-progress__values {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.dashboard-box .weight-progress {
+  margin-top: 1rem;
+}
+
+.dashboard-box__title-static {
+  margin: 1.5rem 0 1rem;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 1.05rem;
+  color: var(--text);
+}
+
+.peso-atual-texto {
+  margin: 0.75rem 0 0;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
 /* ---------- Banner de histórico (Registro Alimentar) ---------- */
 .historico-banner {
   margin-top: 1.5rem;

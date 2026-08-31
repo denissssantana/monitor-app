@@ -95,11 +95,52 @@
 
       <div class="actions">
         <button type="submit" class="btn btn-primary btn-block">Salvar</button>
-        <a href="index.html" class="btn btn-secondary btn-block">Voltar</a>
       </div>
     </form>
+
+    <p class="dashboard-box__title-static">Peso</p>
+
+    <section class="chart-card">
+      <canvas id="grafico-peso" height="220"></canvas>
+      <p id="peso-chart-empty" class="chart-empty hidden">Nenhum registro de peso ainda. Registre seu peso na tela de IMC.</p>
+
+      <p id="peso-atual-texto" class="peso-atual-texto"></p>
+
+      <div id="peso-progresso-bloco" class="weight-progress hidden">
+        <div class="weight-progress__row">
+          <span id="peso-progresso-percent" class="weight-progress__percent">0%</span>
+          <span id="peso-progresso-valores" class="weight-progress__values"></span>
+        </div>
+        <div class="progress-bar-horizontal">
+          <div class="progress-bar-horizontal__track">
+            <div id="peso-progress-fill" class="progress-bar-horizontal__fill" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+      <p id="peso-progresso-empty" class="form-feedback hidden">Defina o peso inicial e a meta para acompanhar o progresso.</p>
+    </section>
+
+    <section class="card">
+      <div class="field">
+        <label for="peso-inicial-input">Peso Inicial (kg)</label>
+        <input type="number" id="peso-inicial-input" step="0.1" min="0" inputmode="decimal" placeholder="Ex.: 90.0" />
+      </div>
+      <div class="field">
+        <label for="meta-peso-input">Meta de Peso (kg)</label>
+        <input type="number" id="meta-peso-input" step="0.1" min="0" inputmode="decimal" placeholder="Ex.: 75.0" />
+      </div>
+      <p id="peso-config-feedback" class="form-feedback"></p>
+      <div class="actions">
+        <button type="button" id="btn-salvar-peso-config" class="btn btn-primary btn-block">Salvar</button>
+      </div>
+    </section>
+
+    <div class="actions">
+      <a href="dashboard.html" class="btn btn-secondary btn-block">Voltar</a>
+    </div>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/theme.js"></script>
   <script src="js/menu.js"></script>

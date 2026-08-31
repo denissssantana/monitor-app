@@ -23,6 +23,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnDiaAnterior = document.getElementById("btn-dia-anterior");
   const btnDiaProximo = document.getElementById("btn-dia-proximo");
   const diaRangeEl = document.getElementById("dia-range");
+  const diaInput = document.getElementById("dia-input");
+  const kcalRestanteEl = document.getElementById("kcal-restante");
 
   const historicoBannerEl = document.getElementById("historico-banner");
   const historicoBannerTextoEl = document.getElementById("historico-banner-texto");
@@ -101,7 +103,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function irParaDia(novaData) {
-    if (novaData > dataHoje) return;
     dataSelecionada = novaData;
     refeicoesComFormAberto.clear();
     fecharModalEdicaoItem();
@@ -117,17 +118,25 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function atualizarCarouselDia() {
-    diaRangeEl.textContent = ehHoje() ? `Hoje · ${formatarDataBR(dataSelecionada)}` : formatarDataBR(dataSelecionada);
-    btnDiaProximo.disabled = dataSelecionada >= dataHoje;
+    diaInput.value = dataSelecionada;
 
-    historicoBannerEl.classList.toggle("hidden", ehHoje());
-    if (!ehHoje()) {
-      historicoBannerTextoEl.textContent = `Histórico — ${formatarDataBR(dataSelecionada)}`;
+    if (ehHoje()) {
+      diaRangeEl.textContent = `Hoje · ${formatarDataBR(dataSelecionada)}`;
+      historicoBannerEl.classList.add("hidden");
+      refeicoesEmpty.textContent = "Nenhuma refeição registrada hoje. Adicione a primeira acima.";
+      return;
     }
 
-    refeicoesEmpty.textContent = ehHoje()
-      ? "Nenhuma refeição registrada hoje. Adicione a primeira acima."
-      : "Nenhum registro alimentar para esta data.";
+    diaRangeEl.textContent = formatarDataBR(dataSelecionada);
+    historicoBannerEl.classList.remove("hidden");
+
+    if (dataSelecionada > dataHoje) {
+      historicoBannerTextoEl.textContent = `Planejado — ${formatarDataBR(dataSelecionada)}`;
+      refeicoesEmpty.textContent = "Nenhuma refeição planejada para esta data. Adicione a primeira acima.";
+    } else {
+      historicoBannerTextoEl.textContent = `Histórico — ${formatarDataBR(dataSelecionada)}`;
+      refeicoesEmpty.textContent = "Nenhum registro alimentar para esta data.";
+    }
   }
 
   function calcularTotaisRefeicao(itens) {
@@ -139,6 +148,25 @@ document.addEventListener("DOMContentLoaded", () => {
       totais.kcal += Number(item.kcal) || 0;
     });
     return totais;
+  }
+
+  function renderKcalRestante(el, kcalConsumida, meta) {
+    el.classList.remove("kcal-overview__restante--vermelho");
+
+    if (!meta) {
+      el.classList.add("hidden");
+      el.textContent = "";
+      return;
+    }
+
+    el.classList.remove("hidden");
+    const restante = Math.round(meta - kcalConsumida);
+    if (restante >= 0) {
+      el.textContent = `${restante} kcal restantes`;
+    } else {
+      el.textContent = `${restante} kcal (meta excedida)`;
+      el.classList.add("kcal-overview__restante--vermelho");
+    }
   }
 
   function aplicarBarraMacro(fillEl, consumido, meta, corFn) {
@@ -186,6 +214,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const cor = getFaixaCorKcal(totais.kcal, meta);
       if (cor) kcalProgressFillEl.classList.add(`progress-bar-horizontal__fill--${cor}`);
     }
+
+    renderKcalRestante(kcalRestanteEl, totais.kcal, meta);
 
     aplicarBarraMacro(ptProgressFillEl, totais.pt, getMetaPtDia(), getFaixaCorPt);
     aplicarBarraMacro(chProgressFillEl, totais.ch, getMetaChDia(), getFaixaCorChLp);
@@ -650,6 +680,10 @@ document.addEventListener("DOMContentLoaded", () => {
   btnDiaAnterior.addEventListener("click", irParaDiaAnterior);
   btnDiaProximo.addEventListener("click", irParaDiaProximo);
   anexarSwipeCarrossel(carouselDiaEl, { aoVoltar: irParaDiaAnterior, aoAvancar: irParaDiaProximo });
+
+  diaInput.addEventListener("change", () => {
+    if (diaInput.value) irParaDia(diaInput.value);
+  });
 
   btnKcalDiaAnterior.addEventListener("click", irParaKcalDiaAnterior);
   btnKcalDiaProximo.addEventListener("click", irParaKcalDiaProximo);

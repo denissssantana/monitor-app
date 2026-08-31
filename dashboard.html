@@ -68,6 +68,27 @@
       </section>
 
       <section class="dashboard-box">
+        <a href="dados-pessoais.html" class="dashboard-box__title">Peso</a>
+        <canvas id="grafico-peso-dash" height="180"></canvas>
+        <p id="peso-dash-empty" class="chart-empty hidden">Sem dados ainda.</p>
+
+        <p id="peso-atual-dash-texto" class="peso-atual-texto"></p>
+
+        <div id="peso-progresso-dash-bloco" class="weight-progress hidden">
+          <div class="weight-progress__row">
+            <span id="peso-progresso-dash-percent" class="weight-progress__percent">0%</span>
+            <span id="peso-progresso-dash-valores" class="weight-progress__values"></span>
+          </div>
+          <div class="progress-bar-horizontal">
+            <div class="progress-bar-horizontal__track">
+              <div id="peso-progress-dash-fill" class="progress-bar-horizontal__fill" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+        <p id="peso-progresso-dash-empty" class="section-empty hidden">Defina sua meta de peso para acompanhar o progresso.</p>
+      </section>
+
+      <section class="dashboard-box">
         <a href="imc.html" class="dashboard-box__title">IMC</a>
         <canvas id="grafico-imc-dash" height="180"></canvas>
         <p id="imc-dash-empty" class="chart-empty hidden">Sem dados ainda.</p>
@@ -94,6 +115,7 @@
             <div id="dash-kcal-fill" class="progress-bar-horizontal__fill" style="width: 0%"></div>
           </div>
         </div>
+        <p id="dash-kcal-restante" class="kcal-overview__restante hidden"></p>
         <div class="macro-squares">
           <div class="total-card">
             <p class="total-card__label">PT</p>
