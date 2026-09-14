@@ -39,6 +39,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const ptFillEl = document.getElementById("dash-pt-progress-fill");
   const chFillEl = document.getElementById("dash-ch-progress-fill");
   const lpFillEl = document.getElementById("dash-lp-progress-fill");
+  const metaPtWrapEl = document.getElementById("dash-meta-pt-wrap");
+  const metaPtLabelEl = document.getElementById("dash-meta-pt-label");
+  const metaChWrapEl = document.getElementById("dash-meta-ch-wrap");
+  const metaChLabelEl = document.getElementById("dash-meta-ch-label");
+  const metaLpWrapEl = document.getElementById("dash-meta-lp-wrap");
+  const metaLpLabelEl = document.getElementById("dash-meta-lp-label");
   const alimentacaoEmptyEl = document.getElementById("alimentacao-dash-empty");
 
   const chartKcalDiaCanvas = document.getElementById("grafico-kcal-dia-dash");
@@ -47,17 +53,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnKcalDiaAnterior = document.getElementById("dash-kcal-dia-anterior");
   const btnKcalDiaProximo = document.getElementById("dash-kcal-dia-proximo");
 
-  const chartExercicioCanvas = document.getElementById("grafico-exercicio-dash");
-  const chartExercicioEmpty = document.getElementById("exercicio-dash-empty");
+  const exercicioRangeEl = document.getElementById("dash-exercicio-range");
+  const exercicioEmptyEl = document.getElementById("exercicio-dash-empty");
+  const exercicioAtividadesEl = document.getElementById("dash-atividades-container");
   const dashboardBoxExercicio = document.getElementById("dashboard-box-exercicio");
   const dashPeriodoAnterior = document.getElementById("dash-periodo-anterior");
   const dashPeriodoProximo = document.getElementById("dash-periodo-proximo");
 
   let dataAlimentacaoAtual = hojeIso();
   let chartKcalDiaDash = null;
-  let chartExercicioDash = null;
   const janelaKcalDiaDash = criarJanelaCarrossel(5);
-  const janelaPeriodoDash = criarJanelaCarrossel(5);
+
+  let periodosExercicio = [];
+  let periodoExibidoIdDash = null;
+
+  function escapeHtml(texto) {
+    const div = document.createElement("div");
+    div.textContent = texto;
+    return div.innerHTML;
+  }
 
   function hojeIso() {
     return getHojeIso();
@@ -237,6 +251,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (cor) fillEl.classList.add(`progress-bar-horizontal__fill--${cor}`);
   }
 
+  function aplicarMetaMacro(wrapEl, labelEl, meta) {
+    if (!meta) {
+      wrapEl.classList.add("hidden");
+      return;
+    }
+    labelEl.textContent = meta;
+    wrapEl.classList.remove("hidden");
+  }
+
   function irParaDiaAnteriorDash() {
     dataAlimentacaoAtual = addDiasIso(dataAlimentacaoAtual, -1);
     renderAlimentacao();
@@ -289,6 +312,10 @@ document.addEventListener("DOMContentLoaded", () => {
     aplicarBarraMacro(ptFillEl, totais.pt, getMetaPtDia(), getFaixaCorPt);
     aplicarBarraMacro(chFillEl, totais.ch, getMetaChDia(), getFaixaCorChLp);
     aplicarBarraMacro(lpFillEl, totais.lp, getMetaLpDia(), getFaixaCorChLp);
+
+    aplicarMetaMacro(metaPtWrapEl, metaPtLabelEl, getMetaPtDia());
+    aplicarMetaMacro(metaChWrapEl, metaChLabelEl, getMetaChDia());
+    aplicarMetaMacro(metaLpWrapEl, metaLpLabelEl, getMetaLpDia());
 
     alimentacaoEmptyEl.classList.toggle("hidden", totais.temRegistros);
   }
@@ -359,77 +386,186 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function renderGraficoExercicio() {
-    const periodos = getPeriodosParaGrafico();
+  function diasDoPeriodoDash(tipoPeriodo) {
+    if (tipoPeriodo === "quinzenal") return 15;
+    if (tipoPeriodo === "mensal") return 30;
+    return 7;
+  }
 
-    if (periodos.length === 0) {
-      chartExercicioCanvas.classList.add("hidden");
-      chartExercicioEmpty.classList.remove("hidden");
-      dashPeriodoAnterior.disabled = true;
-      dashPeriodoProximo.disabled = true;
-      janelaPeriodoDash.resetar();
-      if (chartExercicioDash) {
-        chartExercicioDash.destroy();
-        chartExercicioDash = null;
-      }
+  function gerarIdDash() {
+    return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+
+  function criarNovoPeriodoDash(tipoPeriodo, dataInicio) {
+    const dias = diasDoPeriodoDash(tipoPeriodo);
+    return {
+      id: gerarIdDash(),
+      tipoPeriodo,
+      dataInicio,
+      dataFim: addDiasIso(dataInicio, dias - 1),
+      atividades: [],
+    };
+  }
+
+  function periodosOrdenadosDash() {
+    return periodosExercicio.slice().sort((a, b) => a.dataInicio.localeCompare(b.dataInicio));
+  }
+
+  function periodoExibidoDash() {
+    return periodosExercicio.find((p) => p.id === periodoExibidoIdDash);
+  }
+
+  function bootstrapExercicioDash() {
+    periodosExercicio = getPeriodosExercicio();
+
+    if (periodosExercicio.length === 0) {
+      const tipoPeriodo = getConfigExercicio().tipoPeriodo || "semanal";
+      const novo = criarNovoPeriodoDash(tipoPeriodo, hojeIso());
+      periodosExercicio.push(novo);
+      savePeriodosExercicio(periodosExercicio);
+      periodoExibidoIdDash = novo.id;
       return;
     }
 
-    const inicio = janelaPeriodoDash.preparar(periodos.length);
-
-    chartExercicioCanvas.classList.remove("hidden");
-    chartExercicioEmpty.classList.add("hidden");
-
-    const periodosVisiveis = periodos.slice(inicio, inicio + janelaPeriodoDash.tamanho);
-    const labels = periodosVisiveis.map((periodo) => formatarDataBR(periodo.dataInicio));
-    const valores = periodosVisiveis.map((periodo) => periodo.percentual);
-    const cores = periodosVisiveis.map((periodo) => getComputedColor(`--faixa-${periodo.cor}`));
-
-    dashPeriodoAnterior.disabled = !janelaPeriodoDash.podeVoltar();
-    dashPeriodoProximo.disabled = !janelaPeriodoDash.podeAvancar(periodos.length);
-
-    if (chartExercicioDash) chartExercicioDash.destroy();
-
-    chartExercicioDash = new Chart(chartExercicioCanvas.getContext("2d"), {
-      type: "bar",
-      data: {
-        labels,
-        datasets: [
-          {
-            label: "% Concluído",
-            data: valores,
-            backgroundColor: cores,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { display: false },
-        },
-        scales: {
-          y: { beginAtZero: true, max: 100 },
-        },
-        onClick: (event, elements) => {
-          if (!elements.length) return;
-          irParaRegistroAlimentarDoDia(periodosVisiveis[elements[0].index].dataInicio);
-        },
-        onHover: (event, elements) => {
-          event.native.target.style.cursor = elements.length ? "pointer" : "default";
-        },
-      },
-    });
+    const hoje = hojeIso();
+    const emAndamento = periodosExercicio.find((p) => hoje >= p.dataInicio && hoje <= p.dataFim);
+    const ordenados = periodosOrdenadosDash();
+    periodoExibidoIdDash = emAndamento ? emAndamento.id : ordenados[ordenados.length - 1].id;
   }
 
   function irParaPeriodoAnteriorDash() {
-    janelaPeriodoDash.voltar();
-    renderGraficoExercicio();
+    const ordenados = periodosOrdenadosDash();
+    const idx = ordenados.findIndex((p) => p.id === periodoExibidoIdDash);
+
+    if (idx > 0) {
+      periodoExibidoIdDash = ordenados[idx - 1].id;
+    } else {
+      const primeiro = ordenados[0];
+      const tipoPeriodo = getConfigExercicio().tipoPeriodo || "semanal";
+      const dias = diasDoPeriodoDash(tipoPeriodo);
+      const dataFim = addDiasIso(primeiro.dataInicio, -1);
+      const novo = { id: gerarIdDash(), tipoPeriodo, dataInicio: addDiasIso(dataFim, -(dias - 1)), dataFim, atividades: [] };
+      periodosExercicio.push(novo);
+      savePeriodosExercicio(periodosExercicio);
+      periodoExibidoIdDash = novo.id;
+    }
+
+    renderProgressoExercicio();
   }
 
   function irParaPeriodoProximoDash() {
-    janelaPeriodoDash.avancar();
-    renderGraficoExercicio();
+    const ordenados = periodosOrdenadosDash();
+    const idx = ordenados.findIndex((p) => p.id === periodoExibidoIdDash);
+
+    if (idx < ordenados.length - 1) {
+      periodoExibidoIdDash = ordenados[idx + 1].id;
+    } else {
+      const ultimo = ordenados[ordenados.length - 1];
+      const tipoPeriodo = getConfigExercicio().tipoPeriodo || "semanal";
+      const novo = criarNovoPeriodoDash(tipoPeriodo, addDiasIso(ultimo.dataFim, 1));
+      periodosExercicio.push(novo);
+      savePeriodosExercicio(periodosExercicio);
+      periodoExibidoIdDash = novo.id;
+    }
+
+    renderProgressoExercicio();
   }
+
+  function renderProgressoExercicio() {
+    const periodo = periodoExibidoDash();
+
+    if (!periodo || periodo.atividades.length === 0) {
+      exercicioAtividadesEl.innerHTML = "";
+      exercicioRangeEl.classList.add("hidden");
+      exercicioEmptyEl.classList.remove("hidden");
+      return;
+    }
+
+    exercicioRangeEl.classList.remove("hidden");
+    exercicioEmptyEl.classList.add("hidden");
+    exercicioRangeEl.textContent = `${formatarDataBR(periodo.dataInicio)} – ${formatarDataBR(periodo.dataFim)}`;
+
+    exercicioAtividadesEl.innerHTML = periodo.atividades
+      .map((atividade) => {
+        const total = atividade.treinos.length;
+        const concluidos = atividade.treinos.filter((t) => t.concluido).length;
+        const percentual = total === 0 ? 0 : Math.round((concluidos / total) * 100);
+        const cor = getFaixaCorProgresso(percentual);
+
+        const treinosHtml = atividade.treinos
+          .map(
+            (treino, index) => `
+          <li class="checklist-item${treino.concluido ? " checklist-item--concluido" : ""}" data-atividade-id="${atividade.id}" data-treino-id="${treino.id}">
+            <label class="checklist-item__check">
+              <input type="checkbox" class="checklist-item__checkbox" ${treino.concluido ? "checked" : ""} />
+              <span class="checklist-item__custom"></span>
+            </label>
+            <span class="checklist-item__nome">${escapeHtml(atividade.nome)} ${index + 1}</span>
+          </li>`
+          )
+          .join("");
+
+        return `
+        <div class="atividade-block" data-atividade-id="${atividade.id}">
+          <div class="atividade-block__header">
+            <h3 class="atividade-block__title">${escapeHtml(atividade.nome)} <span class="atividade-block__count">(${atividade.treinos.length} ${atividade.treinos.length === 1 ? "treino" : "treinos"})</span></h3>
+          </div>
+          <div class="exercicio-layout">
+            <div class="exercicio-main">
+              <ul class="checklist">${treinosHtml}</ul>
+            </div>
+            <aside class="progress-bar-vertical progress-bar-vertical--dash" aria-label="Progresso de ${escapeHtml(atividade.nome)}">
+              <div class="progress-bar-vertical__track">
+                <div class="progress-bar-vertical__fill progress-bar-vertical__fill--${cor}" style="height: ${percentual}%"></div>
+              </div>
+              <p class="progress-bar-vertical__label">${percentual}%</p>
+            </aside>
+          </div>
+        </div>`;
+      })
+      .join("");
+  }
+
+  function atualizarBarraAtividadeDash(atividade) {
+    const bloco = exercicioAtividadesEl.querySelector(`.atividade-block[data-atividade-id="${atividade.id}"]`);
+    if (!bloco) return;
+
+    const total = atividade.treinos.length;
+    const concluidos = atividade.treinos.filter((t) => t.concluido).length;
+    const percentual = total === 0 ? 0 : Math.round((concluidos / total) * 100);
+
+    const fillEl = bloco.querySelector(".progress-bar-vertical__fill");
+    const labelEl = bloco.querySelector(".progress-bar-vertical__label");
+
+    fillEl.style.height = `${percentual}%`;
+    fillEl.classList.remove(
+      "progress-bar-vertical__fill--verde",
+      "progress-bar-vertical__fill--amarelo",
+      "progress-bar-vertical__fill--vermelho"
+    );
+    fillEl.classList.add(`progress-bar-vertical__fill--${getFaixaCorProgresso(percentual)}`);
+    labelEl.textContent = `${percentual}%`;
+  }
+
+  exercicioAtividadesEl.addEventListener("change", (event) => {
+    if (!event.target.classList.contains("checklist-item__checkbox")) return;
+
+    const item = event.target.closest(".checklist-item");
+    const periodo = periodoExibidoDash();
+    const atividade = periodo && periodo.atividades.find((a) => a.id === item.dataset.atividadeId);
+    const treino = atividade && atividade.treinos.find((t) => t.id === item.dataset.treinoId);
+    if (!treino) return;
+
+    treino.concluido = event.target.checked;
+    savePeriodosExercicio(periodosExercicio);
+
+    item.classList.toggle("checklist-item--concluido", treino.concluido);
+    atualizarBarraAtividadeDash(atividade);
+  });
+
+  dashPeriodoAnterior.addEventListener("click", irParaPeriodoAnteriorDash);
+  dashPeriodoProximo.addEventListener("click", irParaPeriodoProximoDash);
+  anexarSwipeCarrossel(dashboardBoxExercicio, { aoVoltar: irParaPeriodoAnteriorDash, aoAvancar: irParaPeriodoProximoDash });
 
   function renderUsuario() {
     const nome = getNomeUsuario();
@@ -462,9 +598,7 @@ document.addEventListener("DOMContentLoaded", () => {
   btnKcalDiaProximo.addEventListener("click", irParaKcalDiaProximoDash);
   anexarSwipeCarrossel(chartCardKcalDia, { aoVoltar: irParaKcalDiaAnteriorDash, aoAvancar: irParaKcalDiaProximoDash });
 
-  dashPeriodoAnterior.addEventListener("click", irParaPeriodoAnteriorDash);
-  dashPeriodoProximo.addEventListener("click", irParaPeriodoProximoDash);
-  anexarSwipeCarrossel(dashboardBoxExercicio, { aoVoltar: irParaPeriodoAnteriorDash, aoAvancar: irParaPeriodoProximoDash });
+  bootstrapExercicioDash();
 
   renderUsuario();
   renderPesoAtualTexto();
@@ -473,5 +607,5 @@ document.addEventListener("DOMContentLoaded", () => {
   renderGraficoImc();
   renderAlimentacao();
   renderGraficoKcalDiaDash();
-  renderGraficoExercicio();
+  renderProgressoExercicio();
 });

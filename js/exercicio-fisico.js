@@ -214,6 +214,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     progressFillEl.style.height = `${percentual}%`;
     progressLabelEl.textContent = `${percentual}%`;
+
+    progressFillEl.classList.remove(
+      "progress-bar-vertical__fill--verde",
+      "progress-bar-vertical__fill--amarelo",
+      "progress-bar-vertical__fill--vermelho"
+    );
+    progressFillEl.classList.add(`progress-bar-vertical__fill--${getFaixaCorProgresso(percentual)}`);
   }
 
   function renderCarousel() {

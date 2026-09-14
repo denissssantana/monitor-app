@@ -52,6 +52,8 @@ button {
   --faixa-amarelo: #d1a521;
   --faixa-vermelho: #cf3a2a;
 
+  --accent-sand: #cdb27f;
+
   --on-accent: #101008;
 
   --font-display: "Oswald", "Arial Narrow", sans-serif;
@@ -63,12 +65,12 @@ button {
 }
 
 :root[data-theme="light"] {
-  --bg: #ece3cf;
-  --bg-elevated: #f4ecdb;
-  --bg-input: #fbf6ea;
+  --bg: #ddcea3;
+  --bg-elevated: #f7f1e2;
+  --bg-input: #fffbf2;
   --text: #2a2b24;
   --text-muted: #6b6b5c;
-  --border: #c9bd98;
+  --border: #b6a679;
   --border-strong: #a99d76;
 
   --accent-olive: #4b5a24;
@@ -79,6 +81,8 @@ button {
   --accent-warning: #a8730f;
 
   --on-accent: #fbf6ea;
+
+  --accent-sand: #8a6d3f;
 
   --shadow: 0 4px 0 rgba(0, 0, 0, 0.15);
 }
@@ -126,29 +130,57 @@ a {
 /* ---------- Splash (index.html) ---------- */
 .splash {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   text-align: center;
-  padding: 2rem 1.5rem;
+  padding: 1.5rem 1.5rem 1.25rem;
   position: relative;
+  overflow-x: hidden;
 }
 
-.splash__theme-toggle {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
+.splash__header {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 24rem;
+}
+
+.splash__header-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .splash__badge {
   font-family: var(--font-body);
   font-weight: 600;
-  font-size: 0.75rem;
-  letter-spacing: 0.3em;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--accent-olive-strong);
-  margin-bottom: 0.75rem;
+  color: var(--accent-sand);
+  margin-bottom: 0.5rem;
+  padding-right: 1.9rem;
+}
+
+.theme-toggle.splash__theme-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  width: 1.75rem;
+  height: 1.75rem;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: var(--accent-action);
+  z-index: 2;
+}
+
+.theme-toggle.splash__theme-toggle svg {
+  width: 1.3rem;
+  height: 1.3rem;
 }
 
 .splash__title {
@@ -158,23 +190,95 @@ a {
   color: var(--text);
   margin: 0;
   line-height: 0.9;
+  text-shadow: 0 0 24px rgba(255, 255, 255, 0.12);
 }
 
 .splash__title span {
-  color: var(--accent-action);
+  background: linear-gradient(180deg, #ffb98a 0%, var(--accent-action) 55%, var(--accent-action-strong) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 22px rgba(255, 74, 31, 0.5);
+}
+
+.splash__hero {
+  position: relative;
+  flex: 1 1 260px;
+  min-height: 190px;
+  width: 100%;
+  margin: 1rem -1.5rem 0;
+  overflow: hidden;
+}
+
+.splash__hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 55%;
+  display: block;
+}
+
+.splash__hero-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 14%, rgba(255, 176, 120, 0.55) 0%, rgba(255, 176, 120, 0.2) 18%, rgba(255, 176, 120, 0) 40%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.splash__hero::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 16%;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0), var(--bg));
+  pointer-events: none;
 }
 
 .splash__tagline {
-  margin-top: 1rem;
-  color: var(--text-muted);
+  flex: 0 0 auto;
+  margin-top: 0.9rem;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-weight: 600;
   font-size: 0.95rem;
   text-transform: uppercase;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.08em;
   max-width: 22rem;
 }
 
+.splash__icons {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  gap: 1.1rem;
+  margin-top: 1rem;
+}
+
+.splash__icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent-action);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-action);
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.splash__icon svg {
+  width: 1.4rem;
+  height: 1.4rem;
+  stroke: currentColor;
+  fill: none;
+}
+
 .splash__actions {
-  margin-top: 3rem;
+  flex: 0 0 auto;
+  margin-top: 1.15rem;
   width: 100%;
   max-width: 20rem;
 }
@@ -725,6 +829,15 @@ a {
   line-height: 1;
 }
 
+.total-card__meta {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  margin-top: 0.1rem;
+}
+
 .total-card__track {
   margin-top: 0.5rem;
   width: 100%;
@@ -737,7 +850,7 @@ a {
   height: 100%;
   width: 0%;
   background: var(--accent-action);
-  transition: width 0.3s ease, background-color 0.2s ease;
+  transition: width 0.35s ease, background-color 0.35s ease;
 }
 
 /* ---------- Kcal em destaque + barra horizontal ---------- */
@@ -789,7 +902,7 @@ a {
   height: 100%;
   width: 0%;
   background: var(--accent-action);
-  transition: width 0.3s ease, background-color 0.2s ease;
+  transition: width 0.35s ease, background-color 0.35s ease;
 }
 
 .progress-bar-horizontal__fill--verde {
@@ -1225,7 +1338,7 @@ a {
 
 .exercicio-layout {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 1rem;
   touch-action: pan-y;
 }
@@ -1251,7 +1364,8 @@ a {
 
 .progress-bar-vertical__track {
   width: 100%;
-  height: 260px;
+  flex: 1;
+  min-height: 80px;
   background: var(--bg-input);
   border: 2px solid var(--border-strong);
   display: flex;
@@ -1262,7 +1376,19 @@ a {
   width: 100%;
   height: 0%;
   background: var(--accent-action);
-  transition: height 0.3s ease;
+  transition: height 0.35s ease, background-color 0.35s ease;
+}
+
+.progress-bar-vertical__fill--verde {
+  background: var(--faixa-verde);
+}
+
+.progress-bar-vertical__fill--amarelo {
+  background: var(--faixa-amarelo);
+}
+
+.progress-bar-vertical__fill--vermelho {
+  background: var(--faixa-vermelho);
 }
 
 .progress-bar-vertical__label {
@@ -1270,6 +1396,10 @@ a {
   font-size: 0.85rem;
   letter-spacing: 0.05em;
   color: var(--text-muted);
+}
+
+.progress-bar-vertical--dash {
+  position: static;
 }
 
 /* ---------- Dashboard ---------- */
@@ -1397,10 +1527,6 @@ a {
 
   .progress-bar-vertical {
     width: 4rem;
-  }
-
-  .progress-bar-vertical__track {
-    height: 320px;
   }
 
   .dashboard-grid {

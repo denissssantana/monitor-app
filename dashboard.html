@@ -108,6 +108,7 @@
             <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
           </button>
         </div>
+        <p class="chart-card__title">Dados Alimentares</p>
         <p class="kcal-overview__value">
           <span id="dash-kcal-value">0</span><span class="kcal-overview__meta"> / <span id="dash-kcal-meta">--</span> kcal</span>
         </p>
@@ -120,17 +121,17 @@
         <div class="macro-squares">
           <div class="total-card">
             <p class="total-card__label">PT</p>
-            <p id="dash-total-pt" class="total-card__value">0</p>
+            <p class="total-card__value"><span id="dash-total-pt">0</span><span id="dash-meta-pt-wrap" class="total-card__meta hidden"> / <span id="dash-meta-pt-label">--</span> g</span></p>
             <div class="total-card__track"><div id="dash-pt-progress-fill" class="total-card__fill"></div></div>
           </div>
           <div class="total-card">
             <p class="total-card__label">CH</p>
-            <p id="dash-total-ch" class="total-card__value">0</p>
+            <p class="total-card__value"><span id="dash-total-ch">0</span><span id="dash-meta-ch-wrap" class="total-card__meta hidden"> / <span id="dash-meta-ch-label">--</span> g</span></p>
             <div class="total-card__track"><div id="dash-ch-progress-fill" class="total-card__fill"></div></div>
           </div>
           <div class="total-card">
             <p class="total-card__label">LP</p>
-            <p id="dash-total-lp" class="total-card__value">0</p>
+            <p class="total-card__value"><span id="dash-total-lp">0</span><span id="dash-meta-lp-wrap" class="total-card__meta hidden"> / <span id="dash-meta-lp-label">--</span> g</span></p>
             <div class="total-card__track"><div id="dash-lp-progress-fill" class="total-card__fill"></div></div>
           </div>
         </div>
@@ -157,16 +158,18 @@
         <div class="chart-card__header">
           <a href="exercicio-fisico.html" class="dashboard-box__title">Exercício Físico</a>
           <div class="chart-card__nav">
-            <button type="button" id="dash-periodo-anterior" class="icon-btn" aria-label="Períodos anteriores">
+            <button type="button" id="dash-periodo-anterior" class="icon-btn" aria-label="Período anterior">
               <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
             </button>
-            <button type="button" id="dash-periodo-proximo" class="icon-btn" aria-label="Próximos períodos">
+            <button type="button" id="dash-periodo-proximo" class="icon-btn" aria-label="Próximo período">
               <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
             </button>
           </div>
         </div>
-        <canvas id="grafico-exercicio-dash" height="180"></canvas>
-        <p id="exercicio-dash-empty" class="chart-empty hidden">Nenhum período cadastrado ainda.</p>
+        <p id="dash-exercicio-range" class="carousel-header__range"></p>
+
+        <div id="dash-atividades-container"></div>
+        <p id="exercicio-dash-empty" class="chart-empty hidden">Nenhuma atividade cadastrada para a semana atual.</p>
       </section>
     </div>
   </main>

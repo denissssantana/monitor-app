@@ -103,6 +103,7 @@
     <p id="refeicoes-empty" class="section-empty">Nenhuma refeição registrada hoje. Adicione a primeira acima.</p>
 
     <section class="kcal-overview">
+      <p class="chart-card__title">Dados Alimentares</p>
       <div class="kcal-overview__header">
         <p class="kcal-overview__title" id="kcal-overview-title">Kcal</p>
         <button type="button" id="btn-editar-meta" class="icon-btn icon-btn--edit" aria-label="Editar metas diárias">
@@ -123,17 +124,17 @@
       <div class="macro-squares">
         <div class="total-card">
           <p class="total-card__label">PT</p>
-          <p id="total-pt" class="total-card__value">0</p>
+          <p class="total-card__value"><span id="total-pt">0</span><span id="meta-pt-wrap" class="total-card__meta hidden"> / <span id="meta-pt-label">--</span> g</span></p>
           <div class="total-card__track"><div id="pt-progress-fill" class="total-card__fill"></div></div>
         </div>
         <div class="total-card">
           <p class="total-card__label">CH</p>
-          <p id="total-ch" class="total-card__value">0</p>
+          <p class="total-card__value"><span id="total-ch">0</span><span id="meta-ch-wrap" class="total-card__meta hidden"> / <span id="meta-ch-label">--</span> g</span></p>
           <div class="total-card__track"><div id="ch-progress-fill" class="total-card__fill"></div></div>
         </div>
         <div class="total-card">
           <p class="total-card__label">LP</p>
-          <p id="total-lp" class="total-card__value">0</p>
+          <p class="total-card__value"><span id="total-lp">0</span><span id="meta-lp-wrap" class="total-card__meta hidden"> / <span id="meta-lp-label">--</span> g</span></p>
           <div class="total-card__track"><div id="lp-progress-fill" class="total-card__fill"></div></div>
         </div>
       </div>

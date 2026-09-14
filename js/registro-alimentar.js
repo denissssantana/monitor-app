@@ -18,6 +18,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const ptProgressFillEl = document.getElementById("pt-progress-fill");
   const chProgressFillEl = document.getElementById("ch-progress-fill");
   const lpProgressFillEl = document.getElementById("lp-progress-fill");
+  const metaPtWrapEl = document.getElementById("meta-pt-wrap");
+  const metaPtLabelEl = document.getElementById("meta-pt-label");
+  const metaChWrapEl = document.getElementById("meta-ch-wrap");
+  const metaChLabelEl = document.getElementById("meta-ch-label");
+  const metaLpWrapEl = document.getElementById("meta-lp-wrap");
+  const metaLpLabelEl = document.getElementById("meta-lp-label");
 
   const carouselDiaEl = document.getElementById("carousel-dia");
   const btnDiaAnterior = document.getElementById("btn-dia-anterior");
@@ -186,6 +192,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (cor) fillEl.classList.add(`progress-bar-horizontal__fill--${cor}`);
   }
 
+  function aplicarMetaMacro(wrapEl, labelEl, meta) {
+    if (!meta) {
+      wrapEl.classList.add("hidden");
+      return;
+    }
+    labelEl.textContent = meta;
+    wrapEl.classList.remove("hidden");
+  }
+
   function renderKcalOverview() {
     const totais = getTotaisAlimentaresDoDia(dataSelecionada);
 
@@ -220,6 +235,10 @@ document.addEventListener("DOMContentLoaded", () => {
     aplicarBarraMacro(ptProgressFillEl, totais.pt, getMetaPtDia(), getFaixaCorPt);
     aplicarBarraMacro(chProgressFillEl, totais.ch, getMetaChDia(), getFaixaCorChLp);
     aplicarBarraMacro(lpProgressFillEl, totais.lp, getMetaLpDia(), getFaixaCorChLp);
+
+    aplicarMetaMacro(metaPtWrapEl, metaPtLabelEl, getMetaPtDia());
+    aplicarMetaMacro(metaChWrapEl, metaChLabelEl, getMetaChDia());
+    aplicarMetaMacro(metaLpWrapEl, metaLpLabelEl, getMetaLpDia());
   }
 
   function abrirModalMeta() {

@@ -20,24 +20,61 @@
 </head>
 <body>
   <main class="splash">
-    <button
-      id="theme-toggle"
-      class="theme-toggle splash__theme-toggle"
-      type="button"
-      aria-label="Alternar tema"
-    >
-      <svg class="icon-sun" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="4"></circle>
-        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
-      </svg>
-      <svg class="icon-moon" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path>
-      </svg>
-    </button>
+    <div class="splash__header">
+      <div class="splash__header-row">
+        <p class="splash__badge">Treino &middot; Disciplina &middot; Evolução</p>
+        <button
+          id="theme-toggle"
+          class="theme-toggle splash__theme-toggle"
+          type="button"
+          aria-label="Alternar tema"
+        >
+          <svg class="icon-sun" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path>
+          </svg>
+        </button>
+      </div>
+      <h1 class="splash__title">MONI<span>TOR</span></h1>
+    </div>
 
-    <p class="splash__badge">Treino &middot; Disciplina &middot; Evolução</p>
-    <h1 class="splash__title">MONI<span>TOR</span></h1>
-    <p class="splash__tagline">Acompanhe seus dados e sua evolução física sem desculpa.</p>
+    <div class="splash__hero">
+      <img src="assets/images/splash-hero.jpg" alt="" class="splash__hero-img" />
+      <div class="splash__hero-glow" aria-hidden="true"></div>
+    </div>
+
+    <p class="splash__tagline">Acompanhe seus dados e sua evolução física diariamente.</p>
+
+    <div class="splash__icons" aria-hidden="true">
+      <span class="splash__icon">
+        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="8" width="3" height="8" rx="1"></rect>
+          <rect x="19" y="8" width="3" height="8" rx="1"></rect>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <rect x="6.5" y="6" width="2" height="12" rx="1"></rect>
+          <rect x="15.5" y="6" width="2" height="12" rx="1"></rect>
+        </svg>
+      </span>
+      <span class="splash__icon">
+        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 3v6a2 2 0 0 0 4 0V3"></path>
+          <path d="M10 9v12"></path>
+          <path d="M16 3c-1.4 0-2.5 1.6-2.5 4v3.5a2 2 0 0 0 2 2H16"></path>
+          <path d="M16 3v18"></path>
+        </svg>
+      </span>
+      <span class="splash__icon">
+        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="5" width="18" height="16" rx="2"></rect>
+          <path d="M3 10h18"></path>
+          <path d="M8 3v4"></path>
+          <path d="M16 3v4"></path>
+        </svg>
+      </span>
+    </div>
 
     <div class="splash__actions">
       <a href="dashboard.html" class="btn btn-primary btn-block">Entrar</a>

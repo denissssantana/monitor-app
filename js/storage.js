@@ -580,26 +580,10 @@ function getFaixaCorPeriodo(percentual) {
   return "vermelho";
 }
 
-function getPeriodosParaGrafico() {
-  return getPeriodosExercicio()
-    .slice()
-    .sort((a, b) => a.dataInicio.localeCompare(b.dataInicio))
-    .map((periodo) => {
-      let total = 0;
-      let concluidos = 0;
-      periodo.atividades.forEach((atividade) => {
-        total += atividade.treinos.length;
-        concluidos += atividade.treinos.filter((treino) => treino.concluido).length;
-      });
-      const percentual = total === 0 ? 0 : Math.round((concluidos / total) * 1000) / 10;
-      return {
-        id: periodo.id,
-        dataInicio: periodo.dataInicio,
-        dataFim: periodo.dataFim,
-        percentual,
-        cor: getFaixaCorPeriodo(percentual),
-      };
-    });
+function getFaixaCorProgresso(percentual) {
+  if (percentual <= 50) return "vermelho";
+  if (percentual <= 70) return "amarelo";
+  return "verde";
 }
 
 function getIndicePeriodoExibido() {
