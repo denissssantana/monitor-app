@@ -125,6 +125,31 @@
    Metas diárias de Kcal/PT/CH/LP, definidas uma vez e reaproveitadas
    em todos os dias até o usuário alterá-las. Base do percentual
    exibido nas barras de status de Alimentação (tela e Dashboard).
+
+   monitor_avaliacao_medidas → objeto único
+   {
+     peso: number (kg) | null,        // peso atual informado na tela
+     cintura: number (cm) | null,     // circunferência da cintura
+     pescoco: number (cm) | null,     // circunferência do pescoço
+     quadril: number (cm) | null      // circunferência do quadril
+   }
+   Medidas usadas pela tela de Avaliação Nutricional para calcular IMC
+   e % de gordura corporal (método US Navy). "peso" aqui é um valor
+   próprio da avaliação (não gera registro no histórico de IMC).
+
+   monitor_avaliacao_fator_atividade → string | null
+   Chave da opção de fator de atividade selecionada na tela de
+   Avaliação Nutricional (ver ATIVIDADE_FATORES em avaliacao-nutricional.js).
+   Usada internamente para calcular o TDEE — o valor numérico do fator
+   nunca é exibido ao usuário.
+
+   monitor_avaliacao_ajuste_kcal → number (kcal) ou null
+   Ajuste manual (positivo = superávit, negativo = déficit) aplicado
+   sobre o TDEE calculado na tela de Avaliação Nutricional, resultando
+   na "Meta Calórica Diária". Esse resultado final é gravado direto em
+   monitor_meta_kcal_dia (mesma chave usada pelo Registro Alimentar e
+   pelo Dashboard) — ver comentário em avaliacao-nutricional.js sobre
+   a convergência dessas duas fontes de meta de Kcal.
    ========================================================= */
 
 const STORAGE_KEYS = {
@@ -143,6 +168,9 @@ const STORAGE_KEYS = {
   META_PT_DIA: "monitor_meta_pt_dia",
   META_CH_DIA: "monitor_meta_ch_dia",
   META_LP_DIA: "monitor_meta_lp_dia",
+  AVALIACAO_MEDIDAS: "monitor_avaliacao_medidas",
+  AVALIACAO_FATOR_ATIVIDADE: "monitor_avaliacao_fator_atividade",
+  AVALIACAO_AJUSTE_KCAL: "monitor_avaliacao_ajuste_kcal",
 };
 
 function getHojeIso() {
@@ -405,6 +433,32 @@ function getMetaLpDia() {
 
 function setMetaLpDia(valor) {
   localStorage.setItem(STORAGE_KEYS.META_LP_DIA, String(valor));
+}
+
+function getAvaliacaoMedidas() {
+  const raw = localStorage.getItem(STORAGE_KEYS.AVALIACAO_MEDIDAS);
+  return raw ? JSON.parse(raw) : { peso: null, cintura: null, pescoco: null, quadril: null };
+}
+
+function saveAvaliacaoMedidas(medidas) {
+  localStorage.setItem(STORAGE_KEYS.AVALIACAO_MEDIDAS, JSON.stringify(medidas));
+}
+
+function getFatorAtividadeSelecionado() {
+  return localStorage.getItem(STORAGE_KEYS.AVALIACAO_FATOR_ATIVIDADE);
+}
+
+function setFatorAtividadeSelecionado(chave) {
+  localStorage.setItem(STORAGE_KEYS.AVALIACAO_FATOR_ATIVIDADE, chave);
+}
+
+function getAjusteKcal() {
+  const raw = localStorage.getItem(STORAGE_KEYS.AVALIACAO_AJUSTE_KCAL);
+  return raw !== null ? parseFloat(raw) : 0;
+}
+
+function setAjusteKcal(valor) {
+  localStorage.setItem(STORAGE_KEYS.AVALIACAO_AJUSTE_KCAL, String(valor));
 }
 
 function getCorBarraPadrao(percentual, limiteAmarelo, limiteVermelho) {

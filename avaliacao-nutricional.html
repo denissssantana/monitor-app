@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MONITOR — Avaliação Nutricional</title>
+  <script>
+    (function () {
+      var theme = localStorage.getItem("monitor_theme") || "dark";
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="topbar__title">Avaliação Nutricional</h1>
+    <div class="topbar__actions">
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Alternar tema">
+        <svg class="icon-sun" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path>
+        </svg>
+      </button>
+      <button
+        id="menu-toggle"
+        class="hamburger"
+        type="button"
+        aria-label="Abrir menu"
+        aria-expanded="false"
+        aria-controls="nav-menu"
+      >
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <div id="nav-overlay" class="nav-overlay"></div>
+  <nav id="nav-menu" class="nav-menu" aria-hidden="true">
+    <p class="nav-menu__title">Menu</p>
+    <a href="dashboard.html" class="nav-menu__link">Dashboard</a>
+    <a href="dados-pessoais.html" class="nav-menu__link">Dados Pessoais</a>
+    <a href="imc.html" class="nav-menu__link">IMC</a>
+    <a href="avaliacao-nutricional.html" class="nav-menu__link nav-menu__link--active">Avaliação Nutricional</a>
+    <a href="registro-alimentar.html" class="nav-menu__link">Registro Alimentar</a>
+    <a href="cadastro-alimentos.html" class="nav-menu__link">Base de Alimentos</a>
+    <a href="exercicio-fisico.html" class="nav-menu__link">Exercício Físico</a>
+    <button id="menu-sair" class="nav-menu__link nav-menu__link--exit" type="button">Sair</button>
+  </nav>
+
+  <main class="container">
+
+    <!-- ===================================================
+         CARD 1 — Informações do Usuário
+         Nome/idade/sexo/altura vêm de Dados Pessoais e IMC
+         (somente leitura). Peso atual e circunferências são
+         próprios desta tela e alimentam o Card 2.
+         =================================================== -->
+    <form id="form-medidas" class="card" novalidate>
+      <p class="chart-card__title">Informações do Usuário</p>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="av-nome">Nome</label>
+          <input type="text" id="av-nome" readonly placeholder="Preencha em Dados Pessoais" />
+        </div>
+        <div class="field">
+          <label for="av-idade">Idade</label>
+          <input type="text" id="av-idade" readonly placeholder="Preencha em Dados Pessoais" />
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="av-sexo">Sexo</label>
+          <input type="text" id="av-sexo" readonly placeholder="Preencha em Dados Pessoais" />
+        </div>
+        <div class="field">
+          <label for="av-altura">Altura (cm)</label>
+          <input type="text" id="av-altura" readonly placeholder="Registre em IMC" />
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="av-peso">Peso atual (kg)</label>
+          <input type="number" id="av-peso" step="0.1" min="0" inputmode="decimal" placeholder="Ex.: 82.5" />
+        </div>
+        <div class="field">
+          <label for="av-cintura">Circunf. da cintura (cm)</label>
+          <input type="number" id="av-cintura" step="0.1" min="0" inputmode="decimal" placeholder="Ex.: 88" />
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="av-pescoco">Circunf. do pescoço (cm)</label>
+          <input type="number" id="av-pescoco" step="0.1" min="0" inputmode="decimal" placeholder="Ex.: 38" />
+        </div>
+        <div class="field">
+          <label for="av-quadril">Circunf. do quadril (cm)</label>
+          <input type="number" id="av-quadril" step="0.1" min="0" inputmode="decimal" placeholder="Ex.: 100" />
+        </div>
+      </div>
+
+      <p id="medidas-feedback" class="form-feedback"></p>
+
+      <div class="actions">
+        <button type="submit" class="btn btn-primary btn-block">Salvar Medidas</button>
+      </div>
+    </form>
+
+    <!-- ===================================================
+         CARD 2 — Avaliação Corporal
+         IMC (OMS) + % de gordura corporal (método US Navy),
+         calculados a partir do Card 1. Somente leitura.
+         =================================================== -->
+    <section class="card">
+      <p class="chart-card__title">Avaliação Corporal</p>
+
+      <div id="corporal-resultado" class="totals-grid hidden">
+        <div class="total-card">
+          <p class="total-card__label">IMC</p>
+          <p class="total-card__value" id="av-imc-valor">--</p>
+          <p class="total-card__meta" id="av-imc-classificacao"></p>
+        </div>
+        <div class="total-card">
+          <p class="total-card__label">% Gordura Corporal</p>
+          <p class="total-card__value" id="av-gordura-valor">--</p>
+          <p class="total-card__meta" id="av-gordura-meta">Método US Navy</p>
+        </div>
+      </div>
+
+      <p id="corporal-mensagem" class="form-feedback"></p>
+    </section>
+
+    <!-- ===================================================
+         CARD 3 — Ingestão Alimentar
+         TMB (Mifflin-St Jeor) x fator de atividade = TDEE.
+         Ajuste manual sobre o TDEE define a Meta Calórica Diária,
+         que é gravada na MESMA chave usada pelo Registro
+         Alimentar/Dashboard (ver comentário no JS).
+         =================================================== -->
+    <section class="card">
+      <p class="chart-card__title">Ingestão Alimentar</p>
+
+      <p id="ingestao-mensagem" class="form-feedback"></p>
+
+      <div id="ingestao-conteudo" class="hidden">
+        <div class="field">
+          <label>Nível de atividade física</label>
+          <div class="radio-group radio-group--stack" id="fator-atividade-group">
+            <div class="radio-option">
+              <input type="radio" id="fator-sedentario" name="fator-atividade" value="sedentario" />
+              <label for="fator-sedentario">Pouco ou nenhum exercício, rotina parada</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" id="fator-leve" name="fator-atividade" value="leve" />
+              <label for="fator-leve">Exercício leve, 1 a 3 vezes por semana</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" id="fator-moderado" name="fator-atividade" value="moderado" />
+              <label for="fator-moderado">Exercício moderado, 3 a 5 vezes por semana</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" id="fator-intenso" name="fator-atividade" value="intenso" />
+              <label for="fator-intenso">Exercício intenso, 6 a 7 vezes por semana</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" id="fator-muito-intenso" name="fator-atividade" value="muito_intenso" />
+              <label for="fator-muito-intenso">Exercício muito intenso todos os dias, ou trabalho físico pesado + treino</label>
+            </div>
+          </div>
+        </div>
+
+        <p id="tmb-texto" class="peso-atual-texto"></p>
+
+        <div class="kcal-overview">
+          <p class="kcal-overview__title">Gasto Calórico Diário Estimado</p>
+          <p class="kcal-overview__value"><span id="av-tdee-valor">--</span><span class="kcal-overview__meta">kcal</span></p>
+        </div>
+
+        <div class="field">
+          <label for="av-ajuste">Ajuste (kcal)</label>
+          <input type="number" id="av-ajuste" step="50" inputmode="decimal" placeholder="Ex.: -300 ou +300" />
+        </div>
+        <p class="form-feedback">Ajuste negativo gera déficit calórico (perda de peso). Ajuste positivo gera superávit calórico (ganho de peso).</p>
+
+        <div class="kcal-overview">
+          <p class="kcal-overview__title">Meta Calórica Diária</p>
+          <p class="kcal-overview__value"><span id="av-meta-valor">--</span><span class="kcal-overview__meta">kcal</span></p>
+        </div>
+
+        <p id="meta-calorica-feedback" class="form-feedback"></p>
+
+        <div class="actions">
+          <button type="button" id="btn-salvar-meta-calorica" class="btn btn-primary btn-block">Salvar Meta Calórica Diária</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="actions">
+      <a href="dashboard.html" class="btn btn-secondary btn-block">Voltar</a>
+    </div>
+  </main>
+
+  <script src="js/storage.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/menu.js"></script>
+  <script src="js/avaliacao-nutricional.js"></script>
+</body>
+</html>
