@@ -51,6 +51,10 @@ button {
   --faixa-verde: #4a9c3f;
   --faixa-amarelo: #d1a521;
   --faixa-vermelho: #cf3a2a;
+  /* Tons intermediários (classificação ACE de % de gordura), derivados
+     das faixas acima para não sair da paleta. */
+  --faixa-verde-claro: color-mix(in srgb, var(--faixa-verde) 62%, #ffffff);
+  --faixa-verde-amarelado: color-mix(in srgb, var(--faixa-verde) 50%, var(--faixa-amarelo));
 
   --accent-sand: #cdb27f;
 
@@ -82,6 +86,9 @@ button {
 
   --on-accent: #fbf6ea;
 
+  /* No fundo claro, o verde-claro precisa de menos branco para ter contraste. */
+  --faixa-verde-claro: color-mix(in srgb, var(--faixa-verde) 80%, #ffffff);
+
   --accent-sand: #8a6d3f;
 
   --shadow: 0 4px 0 rgba(0, 0, 0, 0.15);
@@ -102,6 +109,34 @@ h3 {
   text-transform: uppercase;
   letter-spacing: 0.03em;
   margin: 0 0 0.5em;
+}
+
+/* ---------- Padrão único de títulos e labels (caixa alta + negrito) ----------
+   Todo título de tela, título de card/seção e label de campo segue este
+   padrão. Aqui só se define caixa e peso — fonte, tamanho, cor e
+   espaçamento continuam nas regras de cada classe.
+   Novo título/label: usar uma das classes abaixo (ou h1–h3), não criar
+   estilo próprio.
+   Fora do padrão de propósito (são conteúdo, não título): opções de
+   radio (.radio-option label), valores (.progress-bar-vertical__label,
+   .list-card__title-range), textos informativos e nome do usuário. */
+h1,
+h2,
+h3,
+.topbar__title,
+.nav-menu__title,
+.dashboard-box__title,
+.dashboard-box__title-static,
+.dashboard-user__label,
+.chart-card__title,
+.list-card__title,
+.kcal-overview__title,
+.total-card__label,
+.meal-block__total-label,
+.modal__title,
+.field > label {
+  text-transform: uppercase;
+  font-weight: 700;
 }
 
 a {
@@ -478,6 +513,11 @@ a {
 .field input[type="number"],
 .field select {
   width: 100%;
+  /* Altura fixa: text/number/date/select renderizam com alturas nativas
+     diferentes (sobretudo date/select no mobile) — ver bloco
+     "Alinhamento de campos lado a lado" abaixo. */
+  height: 3.1rem;
+  line-height: 1.25;
   padding: 0.75rem 0.8rem;
   background: var(--bg-input);
   border: 2px solid var(--border-strong);
@@ -987,6 +1027,124 @@ a {
   color: var(--text-muted);
 }
 
+/* ---------- Silhueta de composição corporal (% de Gordura) ----------
+   Cor do contorno em --silhueta-cor (definida via JS com a faixa ACE). */
+.silhueta-gordura {
+  --silhueta-cor: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.silhueta-gordura__figura {
+  color: var(--silhueta-cor);
+  height: 13rem;
+  aspect-ratio: 120 / 260;
+}
+
+.silhueta-gordura__figura svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Efeito "corrente elétrica" (tela % de Gordura — ativarFaiscaSilhueta).
+   Cópia do contorno sobreposta, mesma cor (--silhueta-cor via currentColor),
+   só mais brilhante e com halo; uma faixa de máscara sobe de baixo para cima.
+   Mask de 300% da altura: posição 0% = faixa abaixo da figura,
+   100% = faixa acima dela. Fica invisível fora da animação. */
+.silhueta-gordura__figura {
+  position: relative;
+}
+
+.silhueta-gordura__figura .silhueta-gordura__faisca {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  stroke-width: 3;
+  filter: brightness(1.35) drop-shadow(0 0 2px currentColor);
+  -webkit-mask-image: linear-gradient(to top, transparent 42%, #000 48.5%, #000 51.5%, transparent 58%);
+  mask-image: linear-gradient(to top, transparent 42%, #000 48.5%, #000 51.5%, transparent 58%);
+  -webkit-mask-size: 100% 300%;
+  mask-size: 100% 300%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: 0 0%;
+  mask-position: 0 0%;
+}
+
+/* Fundo claro: clarear a cor reduziria o contraste — o destaque vem de
+   saturação + halo mais forte, mantendo a mesma cor. */
+:root[data-theme="light"] .silhueta-gordura__figura .silhueta-gordura__faisca {
+  filter: saturate(1.4) drop-shadow(0 0 3px currentColor);
+}
+
+.silhueta-gordura__figura .silhueta-gordura__faisca--ativa {
+  animation: silhueta-faisca 1.5s ease-in-out;
+}
+
+@keyframes silhueta-faisca {
+  from {
+    opacity: 1;
+    -webkit-mask-position: 0 0%;
+    mask-position: 0 0%;
+  }
+  to {
+    opacity: 1;
+    -webkit-mask-position: 0 100%;
+    mask-position: 0 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .silhueta-gordura__figura .silhueta-gordura__faisca {
+    display: none;
+  }
+}
+
+.silhueta-gordura__categoria {
+  margin: 0.6rem 0 0;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 1.05rem;
+  color: var(--silhueta-cor);
+}
+
+.silhueta-gordura__fonte {
+  margin: 0.25rem 0 0;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* Versão compacta (card da Dashboard): figura ao lado do valor/categoria. */
+.silhueta-gordura--compacta {
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  text-align: left;
+}
+
+.silhueta-gordura--compacta .silhueta-gordura__figura {
+  height: 7.5rem;
+  flex: 0 0 auto;
+}
+
+.silhueta-gordura--compacta .silhueta-gordura__categoria {
+  margin-top: 0.2rem;
+}
+
+.silhueta-gordura__valor {
+  margin: 0;
+  font-family: var(--font-mega);
+  font-size: 2.2rem;
+  line-height: 1;
+  color: var(--silhueta-cor);
+}
+
 /* ---------- Banner de histórico (Registro Alimentar) ---------- */
 .historico-banner {
   margin-top: 1.5rem;
@@ -1149,6 +1307,56 @@ a {
   margin-bottom: 0;
 }
 
+/* ---------- Alinhamento de campos lado a lado (global) ----------
+   Vale para todo par/grade de campos (.field-row e .macro-grid).
+   Cada .field vira coluna flex e o label ocupa o espaço que sobrar,
+   ancorado embaixo: se um label quebra em 2 linhas e o vizinho não,
+   os inputs continuam na mesma linha e com a mesma altura. */
+.field-row,
+.macro-grid {
+  align-items: stretch;
+}
+
+.field-row .field,
+.macro-grid .field {
+  display: flex;
+  flex-direction: column;
+}
+
+.field-row .field label,
+.macro-grid .field label {
+  flex: 1 0 auto;
+  display: flex;
+  align-items: flex-end;
+  line-height: 1.25;
+}
+
+.field-row .field > input,
+.field-row .field > select,
+.macro-grid .field > input,
+.macro-grid .field > select {
+  flex: 0 0 auto;
+}
+
+/* Mobile estreito (~375–420px): label menor e padding lateral menor para
+   caber em 2 colunas com menos quebra. O texto do input fica em 1rem
+   (abaixo de 16px o iOS dá zoom automático ao focar o campo). */
+@media (max-width: 420px) {
+  .field-row .field label,
+  .macro-grid .field label {
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+  }
+
+  .field-row .field input,
+  .field-row .field select,
+  .macro-grid .field input,
+  .macro-grid .field select {
+    padding-left: 0.65rem;
+    padding-right: 0.65rem;
+  }
+}
+
 /* ---------- Cadastro de Alimento (base, compacto) ---------- */
 .alimentos-base-card {
   margin-top: 1.5rem;
@@ -1201,6 +1409,7 @@ a {
 /* ---------- Exercício Físico ---------- */
 .list-card__title .list-card__title-range {
   font-family: var(--font-body);
+  font-weight: 400;
   text-transform: none;
   letter-spacing: normal;
   font-size: 0.75rem;

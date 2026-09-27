@@ -1,6 +1,6 @@
 /* MONITOR — dashboard.js
-   Resumo visual das quatro áreas (Usuário, IMC, Alimentação,
-   Exercício Físico). Somente leitura via storage.js — nenhuma
+   Resumo visual das áreas (Usuário, Peso, IMC, % de Gordura,
+   Alimentação, Exercício Físico). Somente leitura via storage.js — nenhuma
    edição acontece aqui. O box de Alimentação tem seu próprio
    carrossel de dia (em memória, não persistido) e um gráfico de
    Kcal por Dia com carrossel de 5 barras independente dele. */
@@ -13,6 +13,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const chartImcCanvas = document.getElementById("grafico-imc-dash");
   const chartImcEmpty = document.getElementById("imc-dash-empty");
+
+  const chartGorduraCanvas = document.getElementById("grafico-gordura-dash");
+  const chartGorduraEmpty = document.getElementById("gordura-dash-empty");
+  const gorduraSilhuetaEl = document.getElementById("gordura-dash-silhueta");
+  const gorduraAtualTextoEl = document.getElementById("gordura-dash-atual-texto");
+  const gorduraValorEl = document.getElementById("gordura-dash-valor");
 
   const pesoAtualDashTextoEl = document.getElementById("peso-atual-dash-texto");
   const chartPesoCanvas = document.getElementById("grafico-peso-dash");
@@ -112,6 +118,64 @@ document.addEventListener("DOMContentLoaded", () => {
         datasets: [
           {
             label: "IMC",
+            data: valores,
+            borderColor: corAction,
+            backgroundColor: corAction + "26",
+            pointBackgroundColor: corAction,
+            pointRadius: 3,
+            tension: 0.3,
+            fill: true,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+        },
+        scales: {
+          y: { beginAtZero: false },
+        },
+        onClick: (event, elements) => {
+          if (!elements.length) return;
+          irParaRegistroAlimentarDoDia(historico[elements[0].index].data);
+        },
+        onHover: (event, elements) => {
+          event.native.target.style.cursor = elements.length ? "pointer" : "default";
+        },
+      },
+    });
+  }
+
+  function renderGraficoGordura() {
+    const historico = getHistoricoGorduraOrdenado();
+
+    const ultimo = historico[historico.length - 1];
+    if (ultimo && renderSilhuetaGordura(gorduraSilhuetaEl, ultimo)) {
+      gorduraAtualTextoEl.textContent = `Atual — ${formatarDataBR(ultimo.data)}`;
+      gorduraValorEl.textContent = `${ultimo.percentualGordura.toFixed(1)}%`;
+    }
+
+    if (historico.length === 0) {
+      chartGorduraCanvas.classList.add("hidden");
+      chartGorduraEmpty.classList.remove("hidden");
+      return;
+    }
+
+    chartGorduraCanvas.classList.remove("hidden");
+    chartGorduraEmpty.classList.add("hidden");
+
+    const labels = historico.map((registro) => formatarDataBR(registro.data));
+    const valores = historico.map((registro) => registro.percentualGordura);
+    const corAction = getComputedColor("--accent-action");
+
+    new Chart(chartGorduraCanvas.getContext("2d"), {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "% Gordura",
             data: valores,
             borderColor: corAction,
             backgroundColor: corAction + "26",
@@ -605,6 +669,7 @@ document.addEventListener("DOMContentLoaded", () => {
   renderGraficoPeso();
   renderProgressoMetaPeso();
   renderGraficoImc();
+  renderGraficoGordura();
   renderAlimentacao();
   renderGraficoKcalDiaDash();
   renderProgressoExercicio();

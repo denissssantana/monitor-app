@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MONITOR — Cálculos Alimentares</title>
+  <script>
+    (function () {
+      var theme = localStorage.getItem("monitor_theme") || "dark";
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="topbar__title">Cálculos Alimentares</h1>
+    <div class="topbar__actions">
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Alternar tema">
+        <svg class="icon-sun" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path>
+        </svg>
+      </button>
+      <button
+        id="menu-toggle"
+        class="hamburger"
+        type="button"
+        aria-label="Abrir menu"
+        aria-expanded="false"
+        aria-controls="nav-menu"
+      >
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <div id="nav-overlay" class="nav-overlay"></div>
+  <nav id="nav-menu" class="nav-menu" aria-hidden="true">
+    <p class="nav-menu__title">Menu</p>
+    <a href="dashboard.html" class="nav-menu__link">Dashboard</a>
+    <a href="dados-pessoais.html" class="nav-menu__link">Dados Pessoais</a>
+    <a href="imc.html" class="nav-menu__link">IMC</a>
+    <a href="avaliacao-nutricional.html" class="nav-menu__link">Avaliação Nutricional</a>
+    <a href="percentual-gordura.html" class="nav-menu__link">% de Gordura</a>
+    <a href="calculos-alimentares.html" class="nav-menu__link nav-menu__link--active">Cálculos Alimentares</a>
+    <a href="registro-alimentar.html" class="nav-menu__link">Registro Alimentar</a>
+    <a href="cadastro-alimentos.html" class="nav-menu__link">Base de Alimentos</a>
+    <a href="exercicio-fisico.html" class="nav-menu__link">Exercício Físico</a>
+    <button id="menu-sair" class="nav-menu__link nav-menu__link--exit" type="button">Sair</button>
+  </nav>
+
+  <main class="container">
+
+    <!-- ===================================================
+         BLOCO 1 — Seletor de método
+         Opções geradas a partir de METODOS_CALCULO em
+         calculos-alimentares.js.
+         =================================================== -->
+    <section class="card">
+      <p class="chart-card__title">Método de Cálculo</p>
+      <div class="field">
+        <label for="ca-metodo">Método</label>
+        <select id="ca-metodo"></select>
+      </div>
+    </section>
+
+    <!-- ===================================================
+         BLOCO 2 — Campos de entrada
+         Cada campo tem data-campo; só os campos exigidos pelo
+         método selecionado ficam visíveis (os valores digitados
+         são mantidos ao trocar de método).
+         =================================================== -->
+    <section class="card">
+      <p class="chart-card__title">Dados para o Cálculo</p>
+
+      <div class="field-row">
+        <div class="field" data-campo="sexo">
+          <label for="ca-sexo">Sexo</label>
+          <select id="ca-sexo">
+            <option value="">Selecione</option>
+            <option value="M">Masculino</option>
+            <option value="F">Feminino</option>
+          </select>
+        </div>
+        <div class="field" data-campo="idade">
+          <label for="ca-idade">Idade (anos)</label>
+          <input type="number" id="ca-idade" step="1" min="0" inputmode="numeric" placeholder="Ex.: 35" />
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field" data-campo="peso">
+          <label for="ca-peso">Peso atual (kg)</label>
+          <input type="number" id="ca-peso" step="0.1" min="0" inputmode="decimal" placeholder="Ex.: 82.5" />
+        </div>
+        <div class="field" data-campo="altura">
+          <label for="ca-altura">Altura (cm)</label>
+          <input type="number" id="ca-altura" step="0.1" min="0" inputmode="decimal" placeholder="Ex.: 175" />
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================
+         BLOCO 3 — Fator de atividade
+         Componente compartilhado (montarFatorAtividade em
+         js/componentes-energia.js).
+         =================================================== -->
+    <!-- Título vem do próprio componente ("Nível de atividade física"). -->
+    <section class="card">
+      <div id="ca-fator-atividade"></div>
+    </section>
+
+    <!-- ===================================================
+         BLOCO 4 — Resultado
+         TMB (método escolhido) × fator = Gasto Calórico Diário
+         Estimado; + ajuste (componente compartilhado) = Meta
+         Calórica Diária.
+         =================================================== -->
+    <section class="card">
+      <p class="chart-card__title">Resultado</p>
+
+      <p id="ca-mensagem" class="form-feedback"></p>
+
+      <div id="ca-resultado" class="hidden">
+        <p id="ca-tmb-texto" class="peso-atual-texto"></p>
+
+        <div class="kcal-overview">
+          <p class="kcal-overview__title">Gasto Calórico Diário Estimado</p>
+          <p class="kcal-overview__value"><span id="ca-tdee-valor">--</span><span class="kcal-overview__meta">kcal</span></p>
+        </div>
+
+        <div id="ca-ajuste-kcal"></div>
+
+        <div class="kcal-overview">
+          <p class="kcal-overview__title">Meta Calórica Diária</p>
+          <p class="kcal-overview__value"><span id="ca-meta-valor">--</span><span class="kcal-overview__meta">kcal</span></p>
+        </div>
+      </div>
+
+      <p id="ca-fonte" class="peso-atual-texto hidden"></p>
+    </section>
+
+    <div class="actions">
+      <a href="dashboard.html" class="btn btn-secondary btn-block">Voltar</a>
+    </div>
+  </main>
+
+  <script src="js/storage.js"></script>
+  <script src="js/calculos.js"></script>
+  <script src="js/componentes-energia.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/menu.js"></script>
+  <script src="js/calculos-alimentares.js"></script>
+</body>
+</html>

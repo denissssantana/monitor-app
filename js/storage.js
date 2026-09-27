@@ -150,6 +150,35 @@
    monitor_meta_kcal_dia (mesma chave usada pelo Registro Alimentar e
    pelo Dashboard) — ver comentário em avaliacao-nutricional.js sobre
    a convergência dessas duas fontes de meta de Kcal.
+
+   monitor_historico_gordura → array de registros (tela "% de Gordura")
+   [
+     {
+       id: string,
+       data: string,             // ISO "yyyy-mm-dd" da medição
+       sexo: "M" | "F",          // informado na própria tela "% de Gordura"
+       altura: number,           // cm, informada na própria tela
+       cintura: number,          // cm
+       pescoco: number,          // cm
+       quadril: number | null,   // cm — só para sexo "F"
+       percentualGordura: number // %G (US Navy), 1 casa decimal
+     }
+   ]
+   Independente de monitor_avaliacao_medidas: as duas telas só
+   compartilham a fórmula (calcularPercentualGordura em calculos.js).
+
+   monitor_calculos_alimentares → objeto único (tela "Cálculos Alimentares")
+   {
+     metodo: "harris_benedict" | "mifflin_st_jeor",
+     sexo: "M" | "F" | "",
+     idade: number | null,
+     peso: number | null,      // kg
+     altura: number | null,    // cm
+     fatorAtividade: string | null,  // chave de FATORES_ATIVIDADE (componentes-energia.js)
+     ajusteKcal: number | null
+   }
+   Estado próprio da tela, salvo a cada alteração. Não lê nem grava
+   dados de outras telas (nem monitor_meta_kcal_dia).
    ========================================================= */
 
 const STORAGE_KEYS = {
@@ -171,6 +200,8 @@ const STORAGE_KEYS = {
   AVALIACAO_MEDIDAS: "monitor_avaliacao_medidas",
   AVALIACAO_FATOR_ATIVIDADE: "monitor_avaliacao_fator_atividade",
   AVALIACAO_AJUSTE_KCAL: "monitor_avaliacao_ajuste_kcal",
+  HISTORICO_GORDURA: "monitor_historico_gordura",
+  CALCULOS_ALIMENTARES: "monitor_calculos_alimentares",
 };
 
 function getHojeIso() {
@@ -258,6 +289,39 @@ function getHistoricoImcOrdenado() {
 function getUltimoRegistroImc() {
   const historico = getHistoricoImcOrdenado();
   return historico.length > 0 ? historico[historico.length - 1] : null;
+}
+
+function getHistoricoGordura() {
+  const raw = localStorage.getItem(STORAGE_KEYS.HISTORICO_GORDURA);
+  return raw ? JSON.parse(raw) : [];
+}
+
+function addRegistroGordura(registro) {
+  const historico = getHistoricoGordura();
+  historico.push(registro);
+  localStorage.setItem(STORAGE_KEYS.HISTORICO_GORDURA, JSON.stringify(historico));
+  return historico;
+}
+
+function updateRegistroGordura(id, dadosAtualizados) {
+  const historico = getHistoricoGordura();
+  const index = historico.findIndex((registro) => registro.id === id);
+  if (index === -1) return historico;
+  historico[index] = { ...historico[index], ...dadosAtualizados, id };
+  localStorage.setItem(STORAGE_KEYS.HISTORICO_GORDURA, JSON.stringify(historico));
+  return historico;
+}
+
+function deleteRegistroGordura(id) {
+  const historico = getHistoricoGordura().filter((registro) => registro.id !== id);
+  localStorage.setItem(STORAGE_KEYS.HISTORICO_GORDURA, JSON.stringify(historico));
+  return historico;
+}
+
+function getHistoricoGorduraOrdenado() {
+  return getHistoricoGordura()
+    .slice()
+    .sort((a, b) => a.data.localeCompare(b.data));
 }
 
 function getAlturaAtual() {
@@ -459,6 +523,15 @@ function getAjusteKcal() {
 
 function setAjusteKcal(valor) {
   localStorage.setItem(STORAGE_KEYS.AVALIACAO_AJUSTE_KCAL, String(valor));
+}
+
+function getCalculosAlimentares() {
+  const raw = localStorage.getItem(STORAGE_KEYS.CALCULOS_ALIMENTARES);
+  return raw ? JSON.parse(raw) : null;
+}
+
+function saveCalculosAlimentares(estado) {
+  localStorage.setItem(STORAGE_KEYS.CALCULOS_ALIMENTARES, JSON.stringify(estado));
 }
 
 function getCorBarraPadrao(percentual, limiteAmarelo, limiteVermelho) {

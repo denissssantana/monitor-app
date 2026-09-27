@@ -127,23 +127,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const avGorduraValorEl = document.getElementById("av-gordura-valor");
   const avGorduraMetaEl = document.getElementById("av-gordura-meta");
 
-  function calcularPercentualGorduraUsNavy(sexo, cinturaCm, pescocoCm, quadrilCm, alturaCm) {
-    if (sexo === "M") {
-      const base = cinturaCm - pescocoCm;
-      if (base <= 0) return null;
-      const denominador = 1.0324 - 0.19077 * Math.log10(base) + 0.15456 * Math.log10(alturaCm);
-      return 495 / denominador - 450;
-    }
-
-    if (sexo === "F") {
-      const base = cinturaCm + quadrilCm - pescocoCm;
-      if (base <= 0) return null;
-      const denominador = 1.29579 - 0.35004 * Math.log10(base) + 0.221 * Math.log10(alturaCm);
-      return 495 / denominador - 450;
-    }
-
-    return null;
-  }
+  // Fórmula US Navy: calcularPercentualGordura() em js/calculos.js
+  // (compartilhada com a tela "% de Gordura").
 
   function recalcularAvaliacaoCorporal() {
     const dados = getDadosPessoais();
@@ -192,12 +177,12 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const percentualGordura = calcularPercentualGorduraUsNavy(
+    const percentualGordura = calcularPercentualGordura(
       sexo,
+      alturaCm,
       medidas.cintura,
       medidas.pescoco,
-      medidas.quadril,
-      alturaCm
+      medidas.quadril
     );
 
     if (percentualGordura === null || !isFinite(percentualGordura)) {

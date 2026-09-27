@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MONITOR — % de Gordura</title>
+  <script>
+    (function () {
+      var theme = localStorage.getItem("monitor_theme") || "dark";
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="topbar__title">% de Gordura</h1>
+    <div class="topbar__actions">
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Alternar tema">
+        <svg class="icon-sun" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path>
+        </svg>
+      </button>
+      <button
+        id="menu-toggle"
+        class="hamburger"
+        type="button"
+        aria-label="Abrir menu"
+        aria-expanded="false"
+        aria-controls="nav-menu"
+      >
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <div id="nav-overlay" class="nav-overlay"></div>
+  <nav id="nav-menu" class="nav-menu" aria-hidden="true">
+    <p class="nav-menu__title">Menu</p>
+    <a href="dashboard.html" class="nav-menu__link">Dashboard</a>
+    <a href="dados-pessoais.html" class="nav-menu__link">Dados Pessoais</a>
+    <a href="imc.html" class="nav-menu__link">IMC</a>
+    <a href="avaliacao-nutricional.html" class="nav-menu__link">Avaliação Nutricional</a>
+    <a href="percentual-gordura.html" class="nav-menu__link nav-menu__link--active">% de Gordura</a>
+    <a href="calculos-alimentares.html" class="nav-menu__link">Cálculos Alimentares</a>
+    <a href="registro-alimentar.html" class="nav-menu__link">Registro Alimentar</a>
+    <a href="cadastro-alimentos.html" class="nav-menu__link">Base de Alimentos</a>
+    <a href="exercicio-fisico.html" class="nav-menu__link">Exercício Físico</a>
+    <button id="menu-sair" class="nav-menu__link nav-menu__link--exit" type="button">Sair</button>
+  </nav>
+
+  <main class="container">
+    <form id="form-gordura" class="card" novalidate>
+      <div class="field">
+        <label for="data-gordura">Data</label>
+        <input type="date" id="data-gordura" required />
+      </div>
+
+      <!-- Sexo e altura: digitados nesta tela (sem buscar dado de outra tela) -->
+      <div class="field-row">
+        <div class="field">
+          <label for="gordura-sexo">Sexo</label>
+          <select id="gordura-sexo" required>
+            <option value="">Selecione</option>
+            <option value="M">Masculino</option>
+            <option value="F">Feminino</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="gordura-altura">Altura (cm)</label>
+          <input type="number" id="gordura-altura" step="0.1" min="0" inputmode="decimal" placeholder="Ex.: 175" required />
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="gordura-cintura">Circunf. da cintura (cm)</label>
+          <input type="number" id="gordura-cintura" step="0.1" min="0" inputmode="decimal" placeholder="Ex.: 88" required />
+        </div>
+        <div class="field">
+          <label for="gordura-pescoco">Circunf. do pescoço (cm)</label>
+          <input type="number" id="gordura-pescoco" step="0.1" min="0" inputmode="decimal" placeholder="Ex.: 38" required />
+        </div>
+      </div>
+
+      <!-- Quadril: só entra na fórmula feminina — fica fora da tela (display:none) se o sexo não for F -->
+      <div id="gordura-quadril-field" class="field hidden">
+        <label for="gordura-quadril">Circunf. do quadril (cm)</label>
+        <input type="number" id="gordura-quadril" step="0.1" min="0" inputmode="decimal" placeholder="Ex.: 100" />
+      </div>
+
+      <p id="gordura-feedback" class="form-feedback"></p>
+
+      <div class="actions">
+        <button type="submit" class="btn btn-primary btn-block">Calcular</button>
+        <button type="button" id="btn-novo-calculo-gordura" class="btn btn-secondary btn-block">Novo cálculo</button>
+      </div>
+    </form>
+
+    <!-- Resultado do registro mais recente + silhueta ACE (js/silhueta-gordura.js) -->
+    <section id="gordura-resultado" class="kcal-overview hidden">
+      <p class="kcal-overview__title">Resultado Atual <span id="gordura-resultado-data"></span></p>
+      <!-- Layout compacto: silhueta à esquerda, número/categoria/fonte à direita -->
+      <div id="gordura-silhueta" class="silhueta-gordura silhueta-gordura--compacta">
+        <div class="silhueta-gordura__figura"></div>
+        <div>
+          <p id="gordura-resultado-valor" class="silhueta-gordura__valor"></p>
+          <p class="silhueta-gordura__categoria"></p>
+          <p class="silhueta-gordura__fonte"></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="list-card">
+      <p class="list-card__title">Histórico de Registros</p>
+      <ul id="gordura-lista" class="record-list"></ul>
+      <p id="gordura-lista-empty" class="chart-empty hidden">Nenhum registro ainda. Calcule seu primeiro % de gordura.</p>
+    </section>
+
+    <section class="chart-card">
+      <p class="chart-card__title">Evolução do % de Gordura</p>
+      <canvas id="grafico-gordura" height="220"></canvas>
+      <p id="chart-gordura-empty" class="chart-empty hidden">Nenhum registro ainda. Calcule seu primeiro % de gordura.</p>
+    </section>
+
+    <div class="actions">
+      <a href="dashboard.html" class="btn btn-secondary btn-block">Voltar</a>
+    </div>
+  </main>
+
+  <div id="modal-editar-gordura" class="modal-overlay hidden">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-editar-gordura-title">
+      <h2 id="modal-editar-gordura-title" class="modal__title">Editar Registro</h2>
+      <form id="form-editar-gordura" novalidate>
+        <div class="field">
+          <label for="editar-gordura-data">Data</label>
+          <input type="date" id="editar-gordura-data" required />
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="editar-gordura-sexo">Sexo</label>
+            <select id="editar-gordura-sexo" required>
+              <option value="">Selecione</option>
+              <option value="M">Masculino</option>
+              <option value="F">Feminino</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="editar-gordura-altura">Altura (cm)</label>
+            <input type="number" id="editar-gordura-altura" step="0.1" min="0" inputmode="decimal" required />
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="editar-gordura-cintura">Circunf. da cintura (cm)</label>
+            <input type="number" id="editar-gordura-cintura" step="0.1" min="0" inputmode="decimal" required />
+          </div>
+          <div class="field">
+            <label for="editar-gordura-pescoco">Circunf. do pescoço (cm)</label>
+            <input type="number" id="editar-gordura-pescoco" step="0.1" min="0" inputmode="decimal" required />
+          </div>
+        </div>
+
+        <div id="editar-gordura-quadril-field" class="field hidden">
+          <label for="editar-gordura-quadril">Circunf. do quadril (cm)</label>
+          <input type="number" id="editar-gordura-quadril" step="0.1" min="0" inputmode="decimal" />
+        </div>
+
+        <p id="editar-gordura-feedback" class="form-feedback"></p>
+
+        <div class="actions">
+          <button type="submit" class="btn btn-primary btn-block">Salvar</button>
+          <button type="button" id="btn-cancelar-edicao-gordura" class="btn btn-secondary btn-block">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/calculos.js"></script>
+  <script src="js/silhueta-gordura.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/menu.js"></script>
+  <script src="js/percentual-gordura.js"></script>
+</body>
+</html>

@@ -54,6 +54,8 @@
     <a href="dados-pessoais.html" class="nav-menu__link">Dados Pessoais</a>
     <a href="imc.html" class="nav-menu__link">IMC</a>
     <a href="avaliacao-nutricional.html" class="nav-menu__link">Avaliação Nutricional</a>
+    <a href="percentual-gordura.html" class="nav-menu__link">% de Gordura</a>
+    <a href="calculos-alimentares.html" class="nav-menu__link">Cálculos Alimentares</a>
     <a href="registro-alimentar.html" class="nav-menu__link">Registro Alimentar</a>
     <a href="cadastro-alimentos.html" class="nav-menu__link">Base de Alimentos</a>
     <a href="exercicio-fisico.html" class="nav-menu__link">Exercício Físico</a>
@@ -94,6 +96,23 @@
         <a href="imc.html" class="dashboard-box__title">IMC</a>
         <canvas id="grafico-imc-dash" height="180"></canvas>
         <p id="imc-dash-empty" class="chart-empty hidden">Sem dados ainda.</p>
+      </section>
+
+      <section class="dashboard-box">
+        <a href="percentual-gordura.html" class="dashboard-box__title">% de Gordura</a>
+        <canvas id="grafico-gordura-dash" height="180"></canvas>
+        <p id="gordura-dash-empty" class="chart-empty hidden">Sem dados ainda.</p>
+
+        <!-- Registro mais recente + silhueta ACE, versão compacta (js/silhueta-gordura.js) -->
+        <div id="gordura-dash-silhueta" class="silhueta-gordura silhueta-gordura--compacta hidden">
+          <div class="silhueta-gordura__figura"></div>
+          <div>
+            <p id="gordura-dash-atual-texto" class="peso-atual-texto"></p>
+            <p id="gordura-dash-valor" class="silhueta-gordura__valor"></p>
+            <p class="silhueta-gordura__categoria"></p>
+            <p class="silhueta-gordura__fonte"></p>
+          </div>
+        </div>
       </section>
 
       <section class="dashboard-box">
@@ -177,6 +196,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="js/storage.js"></script>
+  <script src="js/calculos.js"></script>
+  <script src="js/silhueta-gordura.js"></script>
   <script src="js/carousel-chart.js"></script>
   <script src="js/theme.js"></script>
   <script src="js/menu.js"></script>
